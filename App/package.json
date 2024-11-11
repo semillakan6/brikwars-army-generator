@@ -1,0 +1,64 @@
+{
+  "name": "brikwars-card-generator",
+  "version": "1.0.0",
+  "description": "A stat card generator for the tabletop game Brikwars",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "electron-forge start",
+    "package": "electron-forge package",
+    "make": "electron-forge make"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/semillakan6/brikwars-statcard-gen.git"
+  },
+  "keywords": [
+    "brikwars",
+    "statcards",
+    "generator"
+  ],
+  "author": "Ruben Cuevas",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/semillakan6/brikwars-statcard-gen/issues"
+  },
+  "homepage": "https://github.com/semillakan6/brikwars-statcard-gen#readme",
+  "devDependencies": {
+    "@electron-forge/cli": "^7.3.1",
+    "@electron-forge/maker-deb": "^7.3.1",
+    "@electron-forge/maker-rpm": "^7.3.1",
+    "@electron-forge/maker-squirrel": "^7.3.1",
+    "@electron-forge/maker-zip": "^7.3.1",
+    "@electron-forge/plugin-auto-unpack-natives": "^7.3.1",
+    "@electron-forge/plugin-fuses": "^7.3.1",
+    "electron": "^28.1.0"
+  },
+  "dependencies": {
+    "electron-squirrel-startup": "^1.0.0",
+    "filepond": "^4.30.4",
+    "jquery-filepond": "^1.0.0"
+  },
+  "build": {
+    "appId": "com.nebur.brikwars-statcard-gen",
+    "productName": "Brikwars-statcard-gen",
+    "copyright": "Copyright © 2023-2024 Ruben Cuevas",
+    "mac": {
+      "icon": "./img/favicon.icns"
+    },
+    "win": {
+      "icon": "./img/favicon.ico"
+    },
+    "files": [
+      "./build/**/*",
+      "./dist/**/*",
+      "./node_modules/**/*",
+      "./public/**/*",
+      "./img/**/*",
+      "*.js"
+    ],
+    "directories": {
+      "buildResources": "img"
+    }
+  }
+}
