@@ -1,0 +1,70 @@
+"filename", "language", "JavaScript", "JavaScript JSX", "TypeScript JSX", "PostCSS", "JSON", "XML", "JSON with Comments", "Markdown", "comment", "blank", "total"
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/README.md", "Markdown", 0, 0, 0, 0, 0, 0, 0, 2, 0, 1, 3
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/components.json", "JSON", 0, 0, 0, 0, 21, 0, 0, 0, 0, 0, 21
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/eslint.config.mjs", "JavaScript", 10, 0, 0, 0, 0, 0, 0, 0, 0, 5, 15
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/jsconfig.json", "JSON with Comments", 0, 0, 0, 0, 0, 0, 8, 0, 0, 1, 9
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/next.config.mjs", "JavaScript", 4, 0, 0, 0, 0, 0, 0, 0, 1, 2, 7
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/package-lock.json", "JSON", 0, 0, 0, 0, 7542, 0, 0, 0, 0, 1, 7543
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/package.json", "JSON", 0, 0, 0, 0, 70, 0, 0, 0, 0, 1, 71
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/postcss.config.mjs", "JavaScript", 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/public/file.svg", "XML", 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/public/globe.svg", "XML", 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/public/next.svg", "XML", 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/public/vercel.svg", "XML", 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/public/window.svg", "XML", 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/src/app/globals.css", "PostCSS", 0, 0, 0, 135, 0, 0, 0, 0, 0, 8, 143
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/src/app/layout.js", "JavaScript", 38, 0, 0, 0, 0, 0, 0, 0, 0, 5, 43
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/src/app/page.js", "JavaScript", 405, 0, 0, 0, 0, 0, 0, 0, 9, 29, 443
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/src/components/footer.js", "JavaScript", 48, 0, 0, 0, 0, 0, 0, 0, 0, 2, 50
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/src/components/header.js", "JavaScript", 82, 0, 0, 0, 0, 0, 0, 0, 0, 3, 85
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/src/components/theme-provider.tsx", "TypeScript JSX", 0, 0, 9, 0, 0, 0, 0, 0, 0, 3, 12
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/src/components/ui/accordion.jsx", "JavaScript JSX", 0, 57, 0, 0, 0, 0, 0, 0, 0, 8, 65
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/src/components/ui/alert-dialog.jsx", "JavaScript JSX", 0, 124, 0, 0, 0, 0, 0, 0, 0, 15, 139
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/src/components/ui/alert.jsx", "JavaScript JSX", 0, 57, 0, 0, 0, 0, 0, 0, 0, 7, 64
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/src/components/ui/aspect-ratio.jsx", "JavaScript JSX", 0, 8, 0, 0, 0, 0, 0, 0, 0, 4, 12
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/src/components/ui/avatar.jsx", "JavaScript JSX", 0, 41, 0, 0, 0, 0, 0, 0, 0, 7, 48
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/src/components/ui/badge.jsx", "JavaScript JSX", 0, 39, 0, 0, 0, 0, 0, 0, 0, 6, 45
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/src/components/ui/breadcrumb.jsx", "JavaScript JSX", 0, 102, 0, 0, 0, 0, 0, 0, 0, 11, 113
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/src/components/ui/button.jsx", "JavaScript JSX", 0, 50, 0, 0, 0, 0, 0, 0, 0, 6, 56
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/src/components/ui/calendar.jsx", "JavaScript JSX", 0, 70, 0, 0, 0, 0, 0, 0, 0, 5, 75
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/src/components/ui/card.jsx", "JavaScript JSX", 0, 92, 0, 0, 0, 0, 0, 0, 0, 10, 102
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/src/components/ui/carousel.jsx", "JavaScript JSX", 0, 172, 0, 0, 0, 0, 0, 0, 0, 24, 196
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/src/components/ui/chart.jsx", "JavaScript JSX", 0, 275, 0, 0, 0, 0, 0, 0, 2, 34, 311
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/src/components/ui/checkbox.jsx", "JavaScript JSX", 0, 26, 0, 0, 0, 0, 0, 0, 0, 5, 31
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/src/components/ui/collapsible.jsx", "JavaScript JSX", 0, 18, 0, 0, 0, 0, 0, 0, 0, 6, 24
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/src/components/ui/command.jsx", "JavaScript JSX", 0, 143, 0, 0, 0, 0, 0, 0, 0, 13, 156
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/src/components/ui/context-menu.jsx", "JavaScript JSX", 0, 206, 0, 0, 0, 0, 0, 0, 0, 19, 225
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/src/components/ui/dialog.jsx", "JavaScript JSX", 0, 120, 0, 0, 0, 0, 0, 0, 0, 14, 134
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/src/components/ui/drawer.jsx", "JavaScript JSX", 0, 120, 0, 0, 0, 0, 0, 0, 0, 14, 134
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/src/components/ui/dropdown-menu.jsx", "JavaScript JSX", 0, 205, 0, 0, 0, 0, 0, 0, 0, 19, 224
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/src/components/ui/form.jsx", "JavaScript JSX", 0, 123, 0, 0, 0, 0, 0, 0, 0, 22, 145
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/src/components/ui/hover-card.jsx", "JavaScript JSX", 0, 35, 0, 0, 0, 0, 0, 0, 0, 7, 42
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/src/components/ui/input-otp.jsx", "JavaScript JSX", 0, 65, 0, 0, 0, 0, 0, 0, 0, 9, 74
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/src/components/ui/input.jsx", "JavaScript JSX", 0, 21, 0, 0, 0, 0, 0, 0, 0, 4, 25
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/src/components/ui/label.jsx", "JavaScript JSX", 0, 19, 0, 0, 0, 0, 0, 0, 0, 5, 24
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/src/components/ui/menubar.jsx", "JavaScript JSX", 0, 233, 0, 0, 0, 0, 0, 0, 0, 20, 253
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/src/components/ui/navigation-menu.jsx", "JavaScript JSX", 0, 141, 0, 0, 0, 0, 0, 0, 0, 12, 153
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/src/components/ui/pagination.jsx", "JavaScript JSX", 0, 109, 0, 0, 0, 0, 0, 0, 0, 10, 119
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/src/components/ui/popover.jsx", "JavaScript JSX", 0, 40, 0, 0, 0, 0, 0, 0, 0, 8, 48
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/src/components/ui/progress.jsx", "JavaScript JSX", 0, 25, 0, 0, 0, 0, 0, 0, 0, 5, 30
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/src/components/ui/radio-group.jsx", "JavaScript JSX", 0, 38, 0, 0, 0, 0, 0, 0, 0, 6, 44
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/src/components/ui/resizable.jsx", "JavaScript JSX", 0, 47, 0, 0, 0, 0, 0, 0, 0, 7, 54
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/src/components/ui/scroll-area.jsx", "JavaScript JSX", 0, 46, 0, 0, 0, 0, 0, 0, 0, 6, 52
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/src/components/ui/select.jsx", "JavaScript JSX", 0, 153, 0, 0, 0, 0, 0, 0, 0, 14, 167
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/src/components/ui/separator.jsx", "JavaScript JSX", 0, 23, 0, 0, 0, 0, 0, 0, 0, 5, 28
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/src/components/ui/sheet.jsx", "JavaScript JSX", 0, 127, 0, 0, 0, 0, 0, 0, 0, 14, 141
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/src/components/ui/sidebar.jsx", "JavaScript JSX", 0, 618, 0, 0, 0, 0, 0, 0, 12, 53, 683
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/src/components/ui/skeleton.jsx", "JavaScript JSX", 0, 13, 0, 0, 0, 0, 0, 0, 0, 3, 16
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/src/components/ui/slider.jsx", "JavaScript JSX", 0, 51, 0, 0, 0, 0, 0, 0, 0, 6, 57
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/src/components/ui/sonner.jsx", "JavaScript JSX", 0, 22, 0, 0, 0, 0, 0, 0, 0, 5, 27
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/src/components/ui/switch.jsx", "JavaScript JSX", 0, 25, 0, 0, 0, 0, 0, 0, 0, 5, 30
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/src/components/ui/table.jsx", "JavaScript JSX", 0, 112, 0, 0, 0, 0, 0, 0, 0, 12, 124
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/src/components/ui/tabs.jsx", "JavaScript JSX", 0, 55, 0, 0, 0, 0, 0, 0, 0, 8, 63
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/src/components/ui/textarea.jsx", "JavaScript JSX", 0, 17, 0, 0, 0, 0, 0, 0, 0, 4, 21
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/src/components/ui/toggle-group.jsx", "JavaScript JSX", 0, 55, 0, 0, 0, 0, 0, 0, 0, 7, 62
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/src/components/ui/toggle.jsx", "JavaScript JSX", 0, 40, 0, 0, 0, 0, 0, 0, 0, 6, 46
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/src/components/ui/tooltip.jsx", "JavaScript JSX", 0, 48, 0, 0, 0, 0, 0, 0, 0, 8, 56
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/src/config/squad-fields.js", "JavaScript", 72, 0, 0, 0, 0, 0, 0, 0, 0, 0, 72
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/src/hooks/use-mobile.js", "JavaScript", 15, 0, 0, 0, 0, 0, 0, 0, 0, 5, 20
+"/Applications/XAMPP/xamppfiles/htdocs/brikwars-army-generator/src/lib/utils.js", "JavaScript", 5, 0, 0, 0, 0, 0, 0, 0, 0, 2, 7
+"Total", "-", 685, 4226, 9, 135, 7633, 5, 8, 2, 24, 566, 13293
