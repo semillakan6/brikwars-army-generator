@@ -8,11 +8,14 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrig
 import { Switch } from "@/components/ui/switch"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Separator } from "@/components/ui/separator"
 import { Plus, Trash2, Download, Upload } from "lucide-react"
 import { useState } from "react"
 import { squadFields } from "@/config/squad-fields"
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
+import { weaponTypes } from "@/config/weapons"
+import React from "react"
 
 export default function Home() {
   const [armyName, setArmyName] = useState("")
@@ -20,6 +23,17 @@ export default function Home() {
   const [newSquadName, setNewSquadName] = useState("")
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [selectedSquad, setSelectedSquad] = useState(null)
+  const [selectedUnit, setSelectedUnit] = useState(null)
+  const [selectedWeapon, setSelectedWeapon] = useState(null)
+  const [weaponForm, setWeaponForm] = useState({
+    type: "",
+    size: 1,
+    amount: 1,
+    name: "",
+    use: 0,
+    range: 0,
+    damage: ""
+  })
   
   // Initialize unit form with default values from squadFields
   const initialUnitForm = squadFields.reduce((acc, field) => {
@@ -43,21 +57,56 @@ export default function Home() {
     }
   }
 
+  const handleDeleteSquad = (squadId) => {
+    setSquads(squads.filter(squad => squad.id !== squadId))
+    if (selectedSquad === squadId) {
+      setSelectedSquad(null)
+      setSelectedUnit(null)
+    }
+  }
+
   const handleAddUnit = (e) => {
     e.preventDefault()
     if (!selectedSquad) return
+
+    const newUnit = {
+      ...unitForm,
+      id: Date.now(),
+      weapons: [] // Initialize empty weapons array
+    }
 
     const updatedSquads = squads.map(squad => {
       if (squad.id === selectedSquad) {
         return {
           ...squad,
-          units: [...squad.units, { ...unitForm, id: Date.now() }]
+          units: [...squad.units, newUnit]
         }
       }
       return squad
     })
     setSquads(updatedSquads)
     setUnitForm(initialUnitForm)
+    setSelectedUnit(newUnit.id) // Select the newly created unit
+  }
+
+  const handleUpdateUnit = (e) => {
+    e.preventDefault()
+    if (!selectedSquad || !selectedUnit) return
+
+    const updatedSquads = squads.map(squad => {
+      if (squad.id === selectedSquad) {
+        return {
+          ...squad,
+          units: squad.units.map(unit => 
+            unit.id === selectedUnit ? { ...unitForm, id: unit.id } : unit
+          )
+        }
+      }
+      return squad
+    })
+    setSquads(updatedSquads)
+    setUnitForm(initialUnitForm)
+    setSelectedUnit(null)
   }
 
   const handleDeleteUnit = (squadId, unitId) => {
@@ -71,6 +120,20 @@ export default function Home() {
       return squad
     })
     setSquads(updatedSquads)
+    if (selectedUnit === unitId) {
+      setSelectedUnit(null)
+      setUnitForm(initialUnitForm)
+    }
+  }
+
+  const handleUnitClick = (unit) => {
+    setSelectedUnit(unit.id)
+    setUnitForm(unit)
+  }
+
+  const handleUnselectUnit = () => {
+    setSelectedUnit(null)
+    setUnitForm(initialUnitForm)
   }
 
   // Calculate total points for a unit
@@ -88,30 +151,141 @@ export default function Home() {
     return squads.reduce((total, squad) => total + calculateSquadPoints(squad), 0)
   }
 
+  const calculateWeaponStats = (weaponType, size) => {
+    const type = weaponTypes.find(w => w.name === weaponType)
+    if (!type) return { use: 0, range: 0, damage: "" }
+
+    const use = type.sizeUse * size + type.baseUse
+    const range = type.sizeRange * size + type.baseRange
+    const damage = type.damageMulSize ? `${size}${type.damage}` : type.damage
+
+    return { use, range, damage }
+  }
+
+  const handleWeaponTypeChange = (type) => {
+    const stats = calculateWeaponStats(type, weaponForm.size)
+    setWeaponForm({
+      ...weaponForm,
+      type,
+      use: stats.use,
+      range: stats.range,
+      damage: stats.damage
+    })
+  }
+
+  const handleWeaponSizeChange = (size) => {
+    const stats = calculateWeaponStats(weaponForm.type, size)
+    setWeaponForm({
+      ...weaponForm,
+      size,
+      use: stats.use,
+      range: stats.range,
+      damage: stats.damage
+    })
+  }
+
+  const handleAddWeapon = (e) => {
+    e.preventDefault()
+    if (!selectedSquad || !selectedUnit) return
+
+    const updatedSquads = squads.map(squad => {
+      if (squad.id === selectedSquad) {
+        return {
+          ...squad,
+          units: squad.units.map(unit => {
+            if (unit.id === selectedUnit) {
+              return {
+                ...unit,
+                weapons: [...(unit.weapons || []), { ...weaponForm, id: Date.now() }]
+              }
+            }
+            return unit
+          })
+        }
+      }
+      return squad
+    })
+    setSquads(updatedSquads)
+    setWeaponForm({
+      type: "",
+      size: 1,
+      amount: 1,
+      name: "",
+      use: 0,
+      range: 0,
+      damage: ""
+    })
+  }
+
+  const handleDeleteWeapon = (weaponId) => {
+    if (!selectedSquad || !selectedUnit) return
+
+    const updatedSquads = squads.map(squad => {
+      if (squad.id === selectedSquad) {
+        return {
+          ...squad,
+          units: squad.units.map(unit => {
+            if (unit.id === selectedUnit) {
+              return {
+                ...unit,
+                weapons: unit.weapons.filter(w => w.id !== weaponId)
+              }
+            }
+            return unit
+          })
+        }
+      }
+      return squad
+    })
+    setSquads(updatedSquads)
+  }
+
   const handleExportPDF = () => {
     const doc = new jsPDF()
+    const pageWidth = doc.internal.pageSize.getWidth()
     const totalPoints = calculateTotalPoints()
     
-    // Add army title centered
+    let y = 20
+  
+    // Army Title
     doc.setFontSize(22)
     doc.setFont("helvetica", "bold")
-    doc.text(`${armyName || "Unnamed Army"} - ${totalPoints}pts.`, doc.internal.pageSize.getWidth() / 2, 20, { align: "center" })
-    
-    let yPosition = 30
-    
+    doc.text(`${armyName || "Unnamed Army"} - ${totalPoints}Ü.`, pageWidth / 2, y, { align: "center" })
+    y += 10
+  
+    // Section styles
+    const drawSectionHeader = (title) => {
+      y += 8
+      doc.setDrawColor(0)
+      doc.setLineWidth(0.8)
+      doc.setFillColor(240, 240, 240)
+      doc.rect(10, y, pageWidth - 20, 8, "F")
+      doc.setFontSize(13)
+      doc.setFont("helvetica", "bold")
+      doc.text(title, 14, y + 6)
+      y += 12
+    }
+  
     squads.forEach((squad, index) => {
       const squadPoints = calculateSquadPoints(squad)
-      
-      // Add squad name with points
-      doc.setFontSize(16)
-      doc.text(`${index + 1}. ${squad.name} (${squadPoints}pts)`, 14, yPosition)
-      yPosition += 10
-      
+  
+      // Section Header if needed
+      if (squad.sectionTitle) {
+        drawSectionHeader(squad.sectionTitle)
+      }
+  
+      // Subsection Header (like a unit block)
+      doc.setFontSize(12)
+      doc.setFont("helvetica", "bold")
+      doc.setTextColor(33, 33, 33)
+      doc.text(`${squad.name} (${squadPoints}Ü)`, 14, y)
+      y += 6
+  
       if (squad.units.length > 0) {
-        // Prepare table data
-        const tableData = squad.units.map(unit => {
-          return squadFields
-            .filter(field => field.type !== "switch")
+        squad.units.forEach(unit => {
+          // Main unit data
+          const unitData = squadFields
+            .filter(field => field.type !== "switch" && field.id !== "equipment")
             .map(field => {
               if (field.type === "select") {
                 const selectedOption = field.options
@@ -121,29 +295,75 @@ export default function Home() {
               }
               return unit[field.id] || ""
             })
+
+          // Create main unit table
+          autoTable(doc, {
+            startY: y,
+            head: [squadFields
+              .filter(field => field.type !== "switch" && field.id !== "equipment")
+              .map(field => field.label)
+            ],
+            body: [unitData],
+            theme: 'grid',
+            headStyles: {
+              fillColor: [220, 220, 220],
+              textColor: 0,
+              fontStyle: 'bold',
+            },
+            styles: {
+              fontSize: 9,
+              lineColor: 220,
+              lineWidth: 0.1,
+            },
+            margin: { left: 14, right: 14 }
+          })
+
+          y = doc.lastAutoTable.finalY + 4
+
+          // Create weapons table if unit has weapons
+          if (unit.weapons?.length > 0) {
+            const weaponsData = unit.weapons.map(weapon => [
+              weapon.name || weapon.type,
+              weapon.size,
+              weapon.amount,
+              weapon.use,
+              weapon.range,
+              weapon.damage
+            ])
+
+            autoTable(doc, {
+              startY: y,
+              head: [['Weapon', 'Size', 'Amount', 'Use', 'Range', 'Damage']],
+              body: weaponsData,
+              theme: 'grid',
+              headStyles: {
+                fillColor: [240, 240, 240],
+                textColor: 0,
+                fontStyle: 'bold',
+                fontSize: 8
+              },
+              styles: {
+                fontSize: 8,
+                lineColor: 220,
+                lineWidth: 0.1,
+              },
+              margin: { left: 24, right: 14 }
+            })
+
+            y = doc.lastAutoTable.finalY + 8
+          } else {
+            y += 8
+          }
         })
-        
-        // Add table
-        autoTable(doc, {
-          startY: yPosition,
-          head: [squadFields
-            .filter(field => field.type !== "switch")
-            .map(field => field.label)
-          ],
-          body: tableData,
-          theme: 'grid',
-          headStyles: { fillColor: [41, 128, 185] },
-          styles: { fontSize: 10 }
-        })
-        
-        yPosition = doc.lastAutoTable.finalY + 10
       } else {
-        doc.setFontSize(12)
-        doc.text("No units in this squad", 14, yPosition)
-        yPosition += 20
+        doc.setFontSize(10)
+        doc.setFont("helvetica", "normal")
+        doc.setTextColor(100)
+        doc.text("No units in this squad", 14, y)
+        y += 12
       }
     })
-    
+  
     doc.save("brikwars-army-list.pdf")
   }
 
@@ -239,8 +459,8 @@ export default function Home() {
       <div className="flex justify-between items-center mb-6">
         <div className="space-y-2">
           <h1 className="scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl">
-            Army List Builder
-          </h1>
+        Army List Builder
+      </h1>
           <div className="flex items-center gap-4">
             <Label htmlFor="armyName">Army Name:</Label>
             <Input
@@ -251,7 +471,7 @@ export default function Home() {
               className="w-64"
             />
             <div className="text-lg font-semibold">
-              Total Points: {calculateTotalPoints()}pts
+              Total Points: {calculateTotalPoints()}Ü
             </div>
           </div>
         </div>
@@ -294,25 +514,166 @@ export default function Home() {
             <CardTitle>Unit Management</CardTitle>
             <CardDescription>
               {selectedSquadData 
-                ? `Add or modify units for ${selectedSquadData.name}`
+                ? selectedUnit
+                  ? `Edit unit in ${selectedSquadData.name}`
+                  : `Add new unit to ${selectedSquadData.name}`
                 : "Select a squad to add units"}
             </CardDescription>
           </CardHeader>
           <CardContent>
             {selectedSquadData ? (
-              <form onSubmit={handleAddUnit} className="space-y-4">
-                {squadFields.map(field => (
-                  <div key={field.id} className="space-y-2">
-                    {field.type !== "switch" && (
-                      <Label htmlFor={field.id}>{field.label}</Label>
-                    )}
-                    {renderField(field)}
+              <div className="space-y-6">
+                <form onSubmit={selectedUnit ? handleUpdateUnit : handleAddUnit} className="space-y-4">
+                  {squadFields
+                    .filter(field => field.id !== "equipment")
+                    .map(field => (
+                      <div key={field.id} className="space-y-2">
+                        {field.type !== "switch" && (
+                          <Label htmlFor={field.id}>{field.label}</Label>
+                        )}
+                        {renderField(field)}
+                      </div>
+                    ))}
+                </form>
+
+                {selectedSquadData && (
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold">Weapons</h3>
+                    <form onSubmit={handleAddWeapon} className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Type</Label>
+                          <Select
+                            value={weaponForm.type}
+                            onValueChange={handleWeaponTypeChange}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select weapon type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {weaponTypes.map(weapon => (
+                                <SelectItem key={weapon.name} value={weapon.name}>
+                                  {weapon.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+              <div className="space-y-2">
+                          <Label>Size</Label>
+                <Input
+                            type="number"
+                            min="1"
+                            value={weaponForm.size}
+                            onChange={(e) => handleWeaponSizeChange(parseInt(e.target.value))}
+                />
+              </div>
+              <div className="space-y-2">
+                          <Label>Amount</Label>
+                          <Input
+                            type="number"
+                            min="1"
+                            value={weaponForm.amount}
+                            onChange={(e) => setWeaponForm({...weaponForm, amount: parseInt(e.target.value)})}
+                          />
+              </div>
+              <div className="space-y-2">
+                          <Label>Name</Label>
+                          <Input
+                            value={weaponForm.name}
+                            onChange={(e) => setWeaponForm({...weaponForm, name: e.target.value})}
+                            placeholder="Custom name (optional)"
+                          />
+                        </div>
+              </div>
+                      <div className="grid grid-cols-3 gap-4">
+              <div className="space-y-2">
+                          <Label>Use</Label>
+                          <Input
+                            type="number"
+                            value={weaponForm.use}
+                            disabled
+                          />
+              </div>
+              <div className="space-y-2">
+                          <Label>Range</Label>
+                          <Input
+                            value={weaponForm.range}
+                            disabled
+                          />
+              </div>
+              <div className="space-y-2">
+                          <Label>Damage</Label>
+                          <Input
+                            value={weaponForm.damage}
+                            disabled
+                          />
+                        </div>
+              </div>
+                      <Button type="submit" className="w-full">
+                        Add Weapon
+                      </Button>
+                    </form>
+              
+              <div className="space-y-2">
+                      <h4 className="font-medium">Current Weapons</h4>
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Name</TableHead>
+                            <TableHead>Type</TableHead>
+                            <TableHead>Size</TableHead>
+                            <TableHead>Amount</TableHead>
+                            <TableHead>Use</TableHead>
+                            <TableHead>Range</TableHead>
+                            <TableHead>Damage</TableHead>
+                            <TableHead className="text-right">Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {selectedSquadData.units
+                            .find(u => u.id === selectedUnit)
+                            ?.weapons?.map(weapon => (
+                              <TableRow key={weapon.id}>
+                                <TableCell>{weapon.name || weapon.type}</TableCell>
+                                <TableCell>{weapon.type}</TableCell>
+                                <TableCell>{weapon.size}</TableCell>
+                                <TableCell>{weapon.amount}</TableCell>
+                                <TableCell>{weapon.use}</TableCell>
+                                <TableCell>{weapon.range}</TableCell>
+                                <TableCell>{weapon.damage}</TableCell>
+                                <TableCell className="text-right">
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => handleDeleteWeapon(weapon.id)}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                        </TableBody>
+                      </Table>
+                    </div>
                   </div>
-                ))}
-                <Button type="submit" className="w-full">
-                  Add Unit
-                </Button>
-              </form>
+                )}
+                <Separator className="my-4" />
+                <div className="flex gap-2">
+                  <Button type="submit" className="flex-1">
+                    {selectedUnit ? "Update Unit" : "Add Unit"}
+                  </Button>
+                  {selectedUnit && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleUnselectUnit}
+                    >
+                      Cancel
+                    </Button>
+                  )}
+                </div>
+              </div>
             ) : (
               <div className="flex items-center justify-center h-32 border-2 border-dashed rounded-lg">
                 <p className="text-sm text-muted-foreground">
@@ -375,14 +736,14 @@ export default function Home() {
                     >
                       <TableCell className="font-medium">{squad.name}</TableCell>
                       <TableCell>{squad.units.length}</TableCell>
-                      <TableCell>{calculateSquadPoints(squad)}pts</TableCell>
+                      <TableCell>{calculateSquadPoints(squad)}Ü</TableCell>
                       <TableCell className="text-right">
                         <Button
                           variant="ghost"
                           size="icon"
                           onClick={(e) => {
                             e.stopPropagation()
-                            // Add squad deletion logic here if needed
+                            handleDeleteSquad(squad.id)
                           }}
                         >
                           <Trash2 className="h-4 w-4" />
@@ -403,18 +764,18 @@ export default function Home() {
           </Card>
 
           {/* Units List for Selected Squad */}
-          {selectedSquadData && selectedSquadData.units.length > 0 && (
+          {selectedSquadData && (
             <Card>
               <CardHeader>
                 <CardTitle>Units in {selectedSquadData.name}</CardTitle>
-                <CardDescription>Total Points: {calculateSquadPoints(selectedSquadData)}pts</CardDescription>
+                <CardDescription>Total Points: {calculateSquadPoints(selectedSquadData)}Ü</CardDescription>
               </CardHeader>
               <CardContent>
                 <Table>
                   <TableHeader>
                     <TableRow>
                       {squadFields
-                        .filter(field => field.type !== "switch")
+                        .filter(field => field.type !== "switch" && field.id !== "equipment")
                         .map(field => (
                           <TableHead key={field.id}>{field.label}</TableHead>
                         ))}
@@ -423,31 +784,68 @@ export default function Home() {
                   </TableHeader>
                   <TableBody>
                     {selectedSquadData.units.map((unit) => (
-                      <TableRow key={unit.id}>
-                        {squadFields
-                          .filter(field => field.type !== "switch")
-                          .map(field => (
-                            <TableCell key={field.id}>
-                              {field.type === "select" 
-                                ? field.options
-                                    .flatMap(group => group.items)
-                                    .find(item => item.value === unit[field.id])?.label || unit[field.id]
-                                : unit[field.id]}
+                      <React.Fragment key={unit.id}>
+                        <TableRow 
+                          className={selectedUnit === unit.id ? "bg-muted" : ""}
+                          onClick={() => handleUnitClick(unit)}
+                        >
+                          {squadFields
+                            .filter(field => field.type !== "switch" && field.id !== "equipment")
+                            .map(field => (
+                              <TableCell key={field.id}>
+                                {field.type === "select" 
+                                  ? field.options
+                                      .flatMap(group => group.items)
+                                      .find(item => item.value === unit[field.id])?.label || unit[field.id]
+                                  : unit[field.id]}
+                              </TableCell>
+                            ))}
+                          <TableCell className="text-right">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleDeleteUnit(selectedSquadData.id, unit.id)
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                        {unit.weapons?.length > 0 && (
+                          <TableRow>
+                            <TableCell colSpan={squadFields.filter(field => field.type !== "switch" && field.id !== "equipment").length + 1}>
+                              <div className="pl-4">
+                                <Table>
+                                  <TableHeader>
+                                    <TableRow>
+                                      <TableHead>Weapon</TableHead>
+                                      <TableHead>Size</TableHead>
+                                      <TableHead>Amount</TableHead>
+                                      <TableHead>Use</TableHead>
+                                      <TableHead>Range</TableHead>
+                                      <TableHead>Damage</TableHead>
+                                    </TableRow>
+                                  </TableHeader>
+                                  <TableBody>
+                                    {unit.weapons.map(weapon => (
+                                      <TableRow key={weapon.id}>
+                                        <TableCell>{weapon.name || weapon.type}</TableCell>
+                                        <TableCell>{weapon.size}</TableCell>
+                                        <TableCell>{weapon.amount}</TableCell>
+                                        <TableCell>{weapon.use}</TableCell>
+                                        <TableCell>{weapon.range}</TableCell>
+                                        <TableCell>{weapon.damage}</TableCell>
+                                      </TableRow>
+                                    ))}
+                                  </TableBody>
+                                </Table>
+                              </div>
                             </TableCell>
-                          ))}
-                        <TableCell className="text-right">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handleDeleteUnit(selectedSquadData.id, unit.id)
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
+                          </TableRow>
+                        )}
+                      </React.Fragment>
                     ))}
                   </TableBody>
                 </Table>
