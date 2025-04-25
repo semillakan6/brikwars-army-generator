@@ -7,6 +7,13 @@ export const squadFields = [
     required: true
   },
   {
+    id: "unit_number",
+    label: "Unit Amount",
+    type: "text",
+    placeholder: "Amount of the Same Unit",
+    required: true
+  },
+  {
     id: "size",
     label: "Size",
     type: "text",
@@ -46,27 +53,5 @@ export const squadFields = [
     type: "number",
     placeholder: "Value",
     required: true
-  },
-  {
-    id: "equipment",
-    label: "Equipment",
-    type: "select",
-    options: [
-      {
-        group: "Weapons",
-        items: [
-          { value: "weapon1", label: "Weapon 1" },
-          { value: "weapon2", label: "Weapon 2" }
-        ]
-      },
-      {
-        group: "Armor",
-        items: [
-          { value: "armor1", label: "Armor 1" },
-          { value: "armor2", label: "Armor 2" }
-        ]
-      }
-    ],
-    required: false
   }
 ]; 
