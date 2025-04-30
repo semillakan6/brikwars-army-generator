@@ -16,23 +16,24 @@ export const squadFields = [
   {
     id: "size",
     label: "Size",
-    type: "text",
-    placeholder: "Inches",
-    required: true
+    type: "number",
+    icon: "/icons/size.svg"
   },
   {
     id: "armor",
     label: "Armor",
-    type: "text",
-    placeholder: "Armor",
-    required: true
+    type: "number",
+    min: 0,
+    max: 10,
+    icon: "/icons/armour.svg"
   },
   {
     id: "power",
     label: "Power",
     type: "number",
-    placeholder: "Power",
-    required: true
+    min: 1,
+    max: 10,
+    icon: "/icons/power.svg"
   },
   {
     id: "isMinifigure",
@@ -45,13 +46,23 @@ export const squadFields = [
     label: "Action",
     type: "text",
     placeholder: "Action",
-    required: true
+    required: true,
+    icon: "/icons/mind.svg"
+  },
+  {
+    id: "move",
+    label: "Move",
+    type: "text",
+    placeholder: "Move",
+    required: true,
+    icon: "/icons/move_range.svg"
   },
   {
     id: "value",
     label: "Value",
     type: "number",
-    placeholder: "Value",
-    required: true
+    min: 1,
+    max: 100,
+    icon: "/icons/value.svg"
   }
 ]; 
