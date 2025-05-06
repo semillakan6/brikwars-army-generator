@@ -50,10 +50,6 @@ A modern web application for creating and managing army lists for the BrikWars t
    ```
 4. Open [http://localhost:3000](http://localhost:3000) in your browser
 
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
 ---
 
 ## Credits
