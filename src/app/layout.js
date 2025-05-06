@@ -1,7 +1,8 @@
 import { Geist, Geist_Mono } from "next/font/google";
-import { ThemeProvider } from "@/components/theme-provider"
-import { Header } from "@/components/header"
-import { Footer } from "@/components/footer"
+import { ThemeProvider } from "@/components/theme-provider";
+import { Header } from "@/components/header";
+import { Footer } from "@/components/footer";
+import Head from "next/head";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -22,8 +23,10 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head />
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}>
+      <link rel="icon" href="/brick.svg" />
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
+      >
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
@@ -31,9 +34,7 @@ export default function RootLayout({ children }) {
           disableTransitionOnChange
         >
           <Header />
-          <main className="flex-1">
-            {children}
-          </main>
+          <main className="flex-1">{children}</main>
           <Footer />
         </ThemeProvider>
       </body>

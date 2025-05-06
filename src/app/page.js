@@ -52,6 +52,7 @@ import MoveRangeIcon from "@/assets/icons/move_range.svg";
 
 export default function Home() {
   const [armyName, setArmyName] = useState("");
+  const [armyRules, setArmyRules] = useState("");
   const [squads, setSquads] = useState([]);
   const [newSquadName, setNewSquadName] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -292,145 +293,177 @@ export default function Home() {
   };
 
   const handleExportPDF = () => {
-    const doc = new jsPDF();
+    const doc = new jsPDF({ unit: 'pt', format: 'a4' });
     const pageWidth = doc.internal.pageSize.getWidth();
-    const totalPoints = calculateTotalPoints();
+    const margin = 32;
+    let y = 48;
+    const lineHeight = 18;
+    const cardPadding = 12;
+    const cardSpacing = 18;
+    const tableHeaderBg = [240, 240, 240];
+    const tableHeaderText = 40;
+    const cardBg = [252, 252, 252];
+    const cardBorder = [200, 200, 200];
 
-    let y = 20;
-
-    // Army Title
+    // --- HEADER ---
+    doc.setFont('helvetica', 'bold');
     doc.setFontSize(22);
-    doc.setFont("helvetica", "bold");
-    doc.text(
-      `${armyName || "Unnamed Army"} - ${totalPoints}Ü.`,
-      pageWidth / 2,
-      y,
-      { align: "center" }
-    );
-    y += 10;
+    doc.setTextColor(30, 30, 30);
+    doc.text(`${armyName || 'Unnamed Army'} • ${calculateTotalPoints()}pts`, margin, y);
+    y += lineHeight + 6;
 
-    // Section styles
-    const drawSectionHeader = (title) => {
-      y += 8;
-      doc.setDrawColor(0);
-      doc.setLineWidth(0.8);
-      doc.setFillColor(240, 240, 240);
-      doc.rect(10, y, pageWidth - 20, 8, "F");
-      doc.setFontSize(13);
-      doc.setFont("helvetica", "bold");
-      doc.text(title, 14, y + 6);
-      y += 12;
-    };
-
-    squads.forEach((squad, index) => {
+    // --- SQUADS/UNITS ---
+    squads.forEach((squad) => {
+      // Card background
+      const cardStartY = y;
+      let cardHeight = 0;
+      let cardContentY = y + cardPadding + 2;
       const squadPoints = calculateSquadPoints(squad);
 
-      // Section Header if needed
-      if (squad.sectionTitle) {
-        drawSectionHeader(squad.sectionTitle);
-      }
+      // Squad header
+      doc.setFillColor(...cardBg);
+      doc.setDrawColor(...cardBorder);
+      doc.roundedRect(margin, y, pageWidth - margin * 2, 0, 8, 8, 'F'); // Height 0 for now, will fill later
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(15);
+      doc.setTextColor(30, 30, 30);
+      doc.text(`${squad.name} [${squad.units.length}] • ${squadPoints}pts`, margin + cardPadding, cardContentY);
+      cardContentY += lineHeight;
 
-      // Subsection Header (like a unit block)
-      doc.setFontSize(12);
-      doc.setFont("helvetica", "bold");
-      doc.setTextColor(33, 33, 33);
-      doc.text(`${squad.name} (${squadPoints}Ü)`, 14, y);
-      y += 6;
-
-      if (squad.units.length > 0) {
-        squad.units.forEach((unit) => {
-          // Main unit data
-          const unitData = squadFields
-            .filter(
-              (field) => field.type !== "switch" && field.id !== "equipment"
-            )
-            .map((field) => {
-              if (field.type === "select") {
-                const selectedOption = field.options
-                  .flatMap((group) => group.items)
-                  .find((item) => item.value === unit[field.id]);
-                return selectedOption ? selectedOption.label : unit[field.id];
-              }
-              return unit[field.id] || "";
-            });
-
-          // Create main unit table
+      // Units
+      squad.units.forEach((unit) => {
+        // Unit name and keywords
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(12);
+        doc.setTextColor(50, 50, 50);
+        doc.text(`${unit.name || 'Unit'}${unit.unit_number ? ` [${unit.unit_number}]` : ''}`, margin + cardPadding + 8, cardContentY);
+        cardContentY += lineHeight - 2;
+        // Keywords (from switches)
+        const keywords = squadFields.filter(f => f.type === 'switch' && f.id !== 'isMinifigure' && unit[f.id]).map(f => f.label).join(', ');
+        if (keywords) {
+          doc.setFont('helvetica', 'italic');
+          doc.setFontSize(10);
+          doc.setTextColor(100, 100, 100);
+          doc.text(keywords, margin + cardPadding + 16, cardContentY);
+          cardContentY += 13;
+        }
+        // --- UNIT STATS TABLE ---
+        const statFields = squadFields.filter(f => f.type !== 'switch' && f.id !== 'equipment');
+        const statLabels = statFields.map(f => f.label);
+        const statValues = statFields.map(f => {
+          if (f.type === 'select') {
+            const selectedOption = f.options.flatMap(g => g.items).find(i => i.value === unit[f.id]);
+            return selectedOption ? selectedOption.label : unit[f.id];
+          }
+          return unit[f.id] || '';
+        });
+        autoTable(doc, {
+          startY: cardContentY,
+          head: [statLabels],
+          body: [statValues],
+          theme: 'grid',
+          headStyles: {
+            fillColor: tableHeaderBg,
+            textColor: tableHeaderText,
+            fontStyle: 'bold',
+            fontSize: 9,
+          },
+          styles: {
+            fontSize: 9,
+            textColor: 60,
+            cellPadding: 2.5,
+            halign: 'center',
+            valign: 'middle',
+            lineColor: 220,
+            lineWidth: 0.1,
+          },
+          margin: { left: margin + cardPadding + 8, right: margin + cardPadding + 8 },
+        });
+        let lastTableY = doc.lastAutoTable.finalY ? doc.lastAutoTable.finalY + 2 : cardContentY + 24;
+        cardContentY = lastTableY;
+        // --- WEAPONS TABLE ---
+        if (unit.weapons?.length > 0) {
+          const weaponsData = unit.weapons.map((weapon) => [
+            weapon.name || weapon.type,
+            weapon.size,
+            weapon.amount,
+            weapon.use,
+            weapon.range,
+            weapon.damage,
+          ]);
           autoTable(doc, {
-            startY: y,
-            head: [
-              squadFields
-                .filter(
-                  (field) => field.type !== "switch" && field.id !== "equipment"
-                )
-                .map((field) => field.label),
-            ],
-            body: [unitData],
-            theme: "grid",
+            startY: cardContentY,
+            head: [["Weapon", "Size", "Amount", "Use", "Range", "Damage"]],
+            body: weaponsData,
+            theme: 'grid',
             headStyles: {
-              fillColor: [220, 220, 220],
-              textColor: 0,
-              fontStyle: "bold",
+              fillColor: tableHeaderBg,
+              textColor: tableHeaderText,
+              fontStyle: 'bold',
+              fontSize: 8,
             },
             styles: {
-              fontSize: 9,
+              fontSize: 8,
+              textColor: 80,
+              cellPadding: 2,
               lineColor: 220,
               lineWidth: 0.1,
             },
-            margin: { left: 14, right: 14 },
+            margin: { left: margin + cardPadding + 24, right: margin + cardPadding + 8 },
           });
-
-          y = doc.lastAutoTable.finalY + 4;
-
-          // Create weapons table if unit has weapons
-          if (unit.weapons?.length > 0) {
-            const weaponsData = unit.weapons.map((weapon) => [
-              weapon.name || weapon.type,
-              weapon.size,
-              weapon.amount,
-              weapon.use,
-              weapon.range,
-              weapon.damage,
-            ]);
-
-            autoTable(doc, {
-              startY: y,
-              head: [["Weapon", "Size", "Amount", "Use", "Range", "Damage"]],
-              body: weaponsData,
-              theme: "grid",
-              headStyles: {
-                fillColor: [240, 240, 240],
-                textColor: 0,
-                fontStyle: "bold",
-                fontSize: 8,
-              },
-              styles: {
-                fontSize: 8,
-                lineColor: 220,
-                lineWidth: 0.1,
-              },
-              margin: { left: 24, right: 14 },
-            });
-
-            y = doc.lastAutoTable.finalY + 8;
-          } else {
-            y += 8;
-          }
-        });
-      } else {
-        doc.setFontSize(10);
-        doc.setFont("helvetica", "normal");
-        doc.setTextColor(100);
-        doc.text("No units in this squad", 14, y);
-        y += 12;
+          lastTableY = doc.lastAutoTable.finalY ? doc.lastAutoTable.finalY + 2 : cardContentY + 20;
+        }
+        // Always set cardContentY to the max of itself and lastTableY
+        cardContentY = Math.max(cardContentY, lastTableY);
+        cardContentY += 10;
+      });
+      // Draw card border with correct height
+      cardHeight = cardContentY - cardStartY + cardPadding;
+      doc.setDrawColor(...cardBorder);
+      doc.roundedRect(margin, cardStartY, pageWidth - margin * 2, cardHeight, 8, 8);
+      y = cardStartY + cardHeight + cardSpacing;
+      // Add new page if close to bottom
+      if (y > doc.internal.pageSize.getHeight() - 120) {
+        doc.addPage();
+        y = 48;
       }
     });
 
-    doc.save("brikwars-army-list.pdf");
+    // --- SPECIAL RULES SECTION (at end) ---
+    if (armyRules.trim()) {
+      y += 16;
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(30, 30, 30);
+      doc.text('Special Rules', margin, y);
+      y += lineHeight;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      doc.setTextColor(60);
+      // Bold rule names if formatted as "Name: Description"
+      const rulesLines = armyRules.split(/\n|\r/).filter(Boolean);
+      rulesLines.forEach(line => {
+        const match = line.match(/^(\w[\w\s\-\(\)]+):\s*(.*)$/);
+        if (match) {
+          doc.setFont('helvetica', 'bold');
+          doc.text(match[1] + ':', margin, y);
+          doc.setFont('helvetica', 'normal');
+          doc.text(match[2], margin + 60, y);
+        } else {
+          doc.setFont('helvetica', 'normal');
+          doc.text(line, margin, y);
+        }
+        y += 14;
+      });
+    }
+
+    doc.save(`${armyName || 'army'}_list.pdf`);
   };
 
   const handleExportJSON = () => {
     const armyData = {
       name: armyName,
+      rules: armyRules,
       squads: squads,
     };
     const dataStr = JSON.stringify(armyData, null, 2);
@@ -453,6 +486,7 @@ export default function Home() {
         try {
           const data = JSON.parse(e.target.result);
           setArmyName(data.name || "");
+          setArmyRules(data.rules || "");
           setSquads(data.squads || []);
         } catch (error) {
           alert(
@@ -571,22 +605,33 @@ export default function Home() {
     <main className="container mx-auto p-4">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
         <div className="space-y-2 w-full md:w-auto">
-          <h1 className="scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl">
-            Army List Builder
-          </h1>
+          <div className="flex items-center justify-between gap-4">
+            <h1 className="scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl">
+              Army List Builder - Total Points: {calculateTotalPoints()}Ü
+            </h1>
+          </div>
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-            <div className="flex items-center gap-4 w-full sm:w-auto">
-              <Label htmlFor="armyName">Army Name:</Label>
-              <Input
-                id="armyName"
-                value={armyName}
-                onChange={(e) => setArmyName(e.target.value)}
-                placeholder="Enter army name"
-                className="w-full sm:w-64"
-              />
-            </div>
-            <div className="text-lg font-semibold">
-              Total Points: {calculateTotalPoints()}Ü
+            <div className="flex flex-col gap-4 w-full sm:w-auto">
+              <div className="flex items-center gap-4">
+                <Label htmlFor="armyName">Army Name:</Label>
+                <Input
+                  id="armyName"
+                  value={armyName}
+                  onChange={(e) => setArmyName(e.target.value)}
+                  placeholder="Enter army name"
+                  className="w-full sm:w-64"
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="armyRules">Army Special Rules:</Label>
+                <textarea
+                  id="armyRules"
+                  value={armyRules}
+                  onChange={(e) => setArmyRules(e.target.value)}
+                  placeholder="Enter any special rules for your army"
+                  className="w-full min-h-[100px] p-2 border rounded-md"
+                />
+              </div>
             </div>
           </div>
         </div>
