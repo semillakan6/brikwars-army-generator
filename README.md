@@ -18,6 +18,6 @@ BrikWars is copyright ©1995-2025 Mike Rayhawk. For more information and the com
 
 
 
-This code is ©2025 Ruben Eduardo Cuevas Moreno, also licensed under the [MIT license](https://opensource.org/licenses/MIT).
+This code is ©2025 Ruben Eduardo Cuevas Moreno, is licensed under the [MIT license](https://opensource.org/licenses/MIT).
 
 ---
