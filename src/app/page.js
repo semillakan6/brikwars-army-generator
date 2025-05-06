@@ -569,39 +569,41 @@ export default function Home() {
 
   return (
     <main className="container mx-auto p-4">
-      <div className="flex justify-between items-center mb-6">
-        <div className="space-y-2">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+        <div className="space-y-2 w-full md:w-auto">
           <h1 className="scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl">
             Army List Builder
           </h1>
-          <div className="flex items-center gap-4">
-            <Label htmlFor="armyName">Army Name:</Label>
-            <Input
-              id="armyName"
-              value={armyName}
-              onChange={(e) => setArmyName(e.target.value)}
-              placeholder="Enter army name"
-              className="w-64"
-            />
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <div className="flex items-center gap-4 w-full sm:w-auto">
+              <Label htmlFor="armyName">Army Name:</Label>
+              <Input
+                id="armyName"
+                value={armyName}
+                onChange={(e) => setArmyName(e.target.value)}
+                placeholder="Enter army name"
+                className="w-full sm:w-64"
+              />
+            </div>
             <div className="text-lg font-semibold">
               Total Points: {calculateTotalPoints()}Ü
             </div>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2 w-full md:w-auto">
           {squads.length > 0 && (
             <>
-              <Button onClick={handleExportJSON} variant="outline">
+              <Button onClick={handleExportJSON} variant="outline" className="flex-1 sm:flex-none">
                 <Download className="mr-2 h-4 w-4" />
                 Export JSON
               </Button>
-              <Button onClick={handleExportPDF}>
+              <Button onClick={handleExportPDF} className="flex-1 sm:flex-none">
                 <Download className="mr-2 h-4 w-4" />
                 Export PDF
               </Button>
             </>
           )}
-          <div className="relative">
+          <div className="relative flex-1 sm:flex-none">
             <input
               type="file"
               accept=".json"
@@ -612,6 +614,7 @@ export default function Home() {
             <Button
               variant="outline"
               onClick={() => document.getElementById("import-file").click()}
+              className="w-full"
             >
               <Upload className="mr-2 h-4 w-4" />
               Import Army
