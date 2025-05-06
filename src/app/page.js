@@ -67,6 +67,7 @@ export default function Home() {
     range: 0,
     damage: "",
   });
+  const [showBastardWeapons, setShowBastardWeapons] = useState(false);
 
   // Initialize unit form with default values from squadFields
   const initialUnitForm = squadFields.reduce((acc, field) => {
@@ -181,7 +182,7 @@ export default function Home() {
   // Calculate total points for a squad
   const calculateSquadPoints = (squad) => {
     return squad.units.reduce(
-      (total, unit) => total + calculateUnitPoints(unit),
+      (total, unit) => total + (calculateUnitPoints(unit) * (parseInt(unit.unit_number) || 1)),
       0
     );
   };
@@ -206,10 +207,12 @@ export default function Home() {
   };
 
   const handleWeaponTypeChange = (type) => {
-    const stats = calculateWeaponStats(type, weaponForm.size);
+    const selectedWeapon = weaponTypes.find(w => w.name === type);
+    const stats = calculateWeaponStats(type, selectedWeapon?.size || weaponForm.size);
     setWeaponForm({
       ...weaponForm,
       type,
+      size: selectedWeapon?.size || weaponForm.size,
       use: stats.use,
       range: stats.range,
       damage: stats.damage,
@@ -217,6 +220,8 @@ export default function Home() {
   };
 
   const handleWeaponSizeChange = (size) => {
+    const selectedWeapon = weaponTypes.find(w => w.name === weaponForm.type);
+    if (selectedWeapon?.size) return; // Don't allow size change for fixed size weapons
     const stats = calculateWeaponStats(weaponForm.type, size);
     setWeaponForm({
       ...weaponForm,
@@ -499,12 +504,13 @@ export default function Home() {
             <Input
               type={field.type}
               id={field.id}
-              value={unitForm[field.id]}
+              value={field.id === "power" && unitForm.isMinifigure ? "1" : unitForm[field.id]}
               onChange={(e) =>
                 setUnitForm({ ...unitForm, [field.id]: e.target.value })
               }
               placeholder={field.placeholder}
               required={field.required}
+              disabled={field.id === "power" && unitForm.isMinifigure}
             />
           </div>
         );
@@ -513,9 +519,14 @@ export default function Home() {
           <div className="flex items-center gap-2">
             <Switch
               checked={unitForm[field.id]}
-              onCheckedChange={(checked) =>
-                setUnitForm({ ...unitForm, [field.id]: checked })
-              }
+              onCheckedChange={(checked) => {
+                setUnitForm({ 
+                  ...unitForm, 
+                  [field.id]: checked,
+                  // When isMinifigure is toggled on, set power to 1
+                  ...(field.id === "isMinifigure" && checked ? { power: "1" } : {})
+                });
+              }}
             />
             <Label>{renderLabel(field)}</Label>
           </div>
@@ -609,7 +620,7 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className={`grid grid-cols-1 md:grid-cols-${selectedUnit ? '3' : '2'} gap-6`}>
         {/* Left Column - Unit Form */}
         <Card>
           <CardHeader>
@@ -663,7 +674,7 @@ export default function Home() {
           </CardContent>
         </Card>
 
-        {/* Right Column - Squads List and Weapon Form */}
+        {/* Middle Column - Squads and Units List */}
         <div className="space-y-4">
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
@@ -854,31 +865,44 @@ export default function Home() {
               </CardContent>
             </Card>
           )}
+        </div>
 
-          {/* Weapon Form - Only shown when a unit is selected */}
-          {selectedUnit && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Add Weapon</CardTitle>
-                <CardDescription>
-                  Add weapons to the selected unit
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleAddWeapon} className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="weaponType">Type</Label>
-                      <Select
-                        id="weaponType"
-                        value={weaponForm.type}
-                        onValueChange={handleWeaponTypeChange}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select weapon type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {weaponTypes.map((weapon) => (
+        {/* Right Column - Weapon Form */}
+        {selectedUnit && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Weapon Management</CardTitle>
+              <CardDescription>
+                Add weapons to the selected unit
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleAddWeapon} className="space-y-4">
+                <div className="flex items-center gap-2 mb-4">
+                  <Switch
+                    checked={showBastardWeapons}
+                    onCheckedChange={setShowBastardWeapons}
+                  />
+                  <Label>Show Bastard Weapons</Label>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="weaponType">Type</Label>
+                    <Select
+                      id="weaponType"
+                      value={weaponForm.type}
+                      onValueChange={handleWeaponTypeChange}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select weapon type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {weaponTypes
+                          .filter(weapon => 
+                            (showBastardWeapons && weapon.category === "Bastard") || 
+                            (!showBastardWeapons && weapon.category !== "Bastard")
+                          )
+                          .map((weapon) => (
                             <SelectItem
                               key={weapon.name}
                               value={weapon.name}
@@ -886,134 +910,134 @@ export default function Home() {
                               {weapon.name}
                             </SelectItem>
                           ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="weaponSize">Size</Label>
-                      <Input
-                        id="weaponSize"
-                        type="number"
-                        min="1"
-                        value={weaponForm.size}
-                        onChange={(e) =>
-                          handleWeaponSizeChange(parseInt(e.target.value))
-                        }
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="weaponAmount">Amount</Label>
-                      <Input
-                        id="weaponAmount"
-                        type="number"
-                        min="1"
-                        value={weaponForm.amount}
-                        onChange={(e) =>
-                          setWeaponForm({
-                            ...weaponForm,
-                            amount: parseInt(e.target.value),
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="weaponName">Name</Label>
-                      <Input
-                        id="weaponName"
-                        value={weaponForm.name}
-                        onChange={(e) =>
-                          setWeaponForm({
-                            ...weaponForm,
-                            name: e.target.value,
-                          })
-                        }
-                        placeholder="Custom name (optional)"
-                      />
-                    </div>
+                      </SelectContent>
+                    </Select>
                   </div>
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="weaponUse">Use</Label>
-                      <Input
-                        id="weaponUse"
-                        type="number"
-                        value={weaponForm.use}
-                        disabled
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="weaponRange">Range</Label>
-                      <Input 
-                        id="weaponRange"
-                        value={weaponForm.range} 
-                        disabled 
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="weaponDamage">Damage</Label>
-                      <Input 
-                        id="weaponDamage"
-                        value={weaponForm.damage} 
-                        disabled 
-                      />
-                    </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="weaponSize">Size</Label>
+                    <Input
+                      id="weaponSize"
+                      type="number"
+                      min="1"
+                      value={weaponForm.size}
+                      onChange={(e) =>
+                        handleWeaponSizeChange(parseInt(e.target.value))
+                      }
+                      disabled={weaponTypes.find(w => w.name === weaponForm.type)?.size !== undefined}
+                    />
                   </div>
-                  <Button type="submit" className="w-full">
-                    Add Weapon
-                  </Button>
-                </form>
-
-                <div className="space-y-2 mt-4">
-                  <h4 className="font-medium">Current Weapons</h4>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Type</TableHead>
-                        <TableHead>Size</TableHead>
-                        <TableHead>Amount</TableHead>
-                        <TableHead>Use</TableHead>
-                        <TableHead>Range</TableHead>
-                        <TableHead>Damage</TableHead>
-                        <TableHead className="text-right">
-                          Actions
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {selectedSquadData.units
-                        .find((u) => u.id === selectedUnit)
-                        ?.weapons?.map((weapon) => (
-                          <TableRow key={weapon.id}>
-                            <TableCell>
-                              {weapon.name || weapon.type}
-                            </TableCell>
-                            <TableCell>{weapon.type}</TableCell>
-                            <TableCell>{weapon.size}</TableCell>
-                            <TableCell>{weapon.amount}</TableCell>
-                            <TableCell>{weapon.use}</TableCell>
-                            <TableCell>{weapon.range}</TableCell>
-                            <TableCell>{weapon.damage}</TableCell>
-                            <TableCell className="text-right">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() =>
-                                  handleDeleteWeapon(weapon.id)
-                                }
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                    </TableBody>
-                  </Table>
+                  <div className="space-y-2">
+                    <Label htmlFor="weaponAmount">Amount</Label>
+                    <Input
+                      id="weaponAmount"
+                      type="number"
+                      min="1"
+                      value={weaponForm.amount}
+                      onChange={(e) =>
+                        setWeaponForm({
+                          ...weaponForm,
+                          amount: parseInt(e.target.value),
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="weaponName">Name</Label>
+                    <Input
+                      id="weaponName"
+                      value={weaponForm.name}
+                      onChange={(e) =>
+                        setWeaponForm({
+                          ...weaponForm,
+                          name: e.target.value,
+                        })
+                      }
+                      placeholder="Custom name (optional)"
+                    />
+                  </div>
                 </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="weaponUse">Use</Label>
+                    <Input
+                      id="weaponUse"
+                      type="number"
+                      value={weaponForm.use}
+                      disabled
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="weaponRange">Range</Label>
+                    <Input 
+                      id="weaponRange"
+                      value={weaponForm.range} 
+                      disabled 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="weaponDamage">Damage</Label>
+                    <Input 
+                      id="weaponDamage"
+                      value={weaponForm.damage} 
+                      disabled 
+                    />
+                  </div>
+                </div>
+                <Button type="submit" className="w-full">
+                  Add Weapon
+                </Button>
+              </form>
+
+              <div className="space-y-2 mt-4">
+                <h4 className="font-medium">Current Weapons</h4>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="text-right">
+                        Actions
+                      </TableHead>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Size</TableHead>
+                      <TableHead>Amount</TableHead>
+                      <TableHead>Use</TableHead>
+                      <TableHead>Range</TableHead>
+                      <TableHead>Damage</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {selectedSquadData.units
+                      .find((u) => u.id === selectedUnit)
+                      ?.weapons?.map((weapon) => (
+                        <TableRow key={weapon.id}>
+                        <TableCell className="text-left">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() =>
+                              handleDeleteWeapon(weapon.id)
+                            }
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                          <TableCell>
+                            {weapon.name || weapon.type}
+                          </TableCell>
+                          <TableCell>{weapon.type}</TableCell>
+                          <TableCell>{weapon.size}</TableCell>
+                          <TableCell>{weapon.amount}</TableCell>
+                          <TableCell>{weapon.use}</TableCell>
+                          <TableCell>{weapon.range}</TableCell>
+                          <TableCell>{weapon.damage}</TableCell>
+                        </TableRow>
+                      ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </main>
   );
