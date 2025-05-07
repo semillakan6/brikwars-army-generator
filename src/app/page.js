@@ -668,7 +668,7 @@ export default function Home() {
         </div>
       </div>
 
-      <div className={`grid grid-cols-1 md:grid-cols-${selectedUnit ? '3' : '2'} gap-6`}>
+      <div className={`grid grid-cols-1 md:grid-cols-2 ${selectedUnit ? 'lg:grid-cols-3' : 'lg:grid-cols-2'} gap-6`}>
         {/* Left Column - Unit Form */}
         <Card>
           <CardHeader>
