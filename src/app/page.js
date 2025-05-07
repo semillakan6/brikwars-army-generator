@@ -640,7 +640,7 @@ export default function Home() {
             <>
               <Button onClick={handleExportJSON} variant="outline" className="flex-1 sm:flex-none">
                 <Download className="mr-2 h-4 w-4" />
-                Export JSON
+                Export Army
               </Button>
               <Button onClick={handleExportPDF} className="flex-1 sm:flex-none">
                 <Download className="mr-2 h-4 w-4" />
