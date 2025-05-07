@@ -18,12 +18,20 @@ const geistMono = Geist_Mono({
 export const metadata = {
   title: "BrikWars Army Generator",
   description: "Generate army lists for BrikWars tabletop wargaming",
+  icons: {
+    icon: "/brick.svg",
+  },
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+  },
+  keywords: ["BrikWars", "tabletop", "wargaming", "army generator", "LEGO", "minifigures"],
+  authors: [{ name: "semillakan6" }],
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <link rel="icon" href="/brick.svg" />
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
       >
