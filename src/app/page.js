@@ -644,7 +644,7 @@ export default function Home() {
               </Button>
               <Button onClick={handleExportPDF} className="flex-1 sm:flex-none">
                 <Download className="mr-2 h-4 w-4" />
-                Export PDF
+                Export to PDF
               </Button>
             </>
           )}
