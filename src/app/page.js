@@ -55,6 +55,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
+import { specialtyGroups } from "@/config/specialties";
 
 // Import equipment types
 const equipment_types = [
@@ -167,6 +168,12 @@ export default function Home() {
   }, {});
 
   const [unitForm, setUnitForm] = useState(initialUnitForm);
+
+  const [specialtyForm, setSpecialtyForm] = useState({
+    type: "",
+    group: "",
+  });
+  const [selectedSpecialties, setSelectedSpecialties] = useState([]);
 
   React.useEffect(() => {
     setMounted(true);
@@ -487,6 +494,68 @@ export default function Home() {
     setSquads(updatedSquads);
   };
 
+  const handleDeleteSpecialty = (specialtyId) => {
+    if (!selectedSquad || !selectedUnit) return;
+
+    const updatedSquads = squads.map((squad) => {
+      if (squad.id === selectedSquad) {
+        return {
+          ...squad,
+          units: squad.units.map((unit) => {
+            if (unit.id === selectedUnit) {
+              return {
+                ...unit,
+                specialties: unit.specialties?.filter((s) => s.id !== specialtyId) || [],
+              };
+            }
+            return unit;
+          }),
+        };
+      }
+      return squad;
+    });
+    setSquads(updatedSquads);
+  };
+
+  const handleAddSpecialty = (e) => {
+    e.preventDefault();
+    if (!selectedSquad || !selectedUnit || !specialtyForm.type) return;
+
+    const [group, type] = specialtyForm.type.split(":");
+    const specialty = specialtyGroups[group][type];
+    if (!specialty) return;
+
+    const newSpecialty = {
+      ...specialty,
+      id: generateId(),
+      group,
+      type,
+    };
+
+    const updatedSquads = squads.map((squad) => {
+      if (squad.id === selectedSquad) {
+        return {
+          ...squad,
+          units: squad.units.map((unit) => {
+            if (unit.id === selectedUnit) {
+              return {
+                ...unit,
+                specialties: [...(unit.specialties || []), newSpecialty],
+              };
+            }
+            return unit;
+          }),
+        };
+      }
+      return squad;
+    });
+    setSquads(updatedSquads);
+    setSpecialtyForm({
+      type: "",
+      group: "",
+    });
+  };
+
   const handleExportPDF = () => {
     const doc = new jsPDF({ unit: 'pt', format: 'a4' });
     const pageWidth = doc.internal.pageSize.getWidth();
@@ -508,40 +577,85 @@ export default function Home() {
     y += lineHeight + 6;
 
     // --- SQUADS/UNITS ---
-    squads.forEach((squad) => {
-      // Card background
-      const cardStartY = y;
-      let cardHeight = 0;
-      let cardContentY = y + cardPadding + 2;
-      const squadPoints = calculateSquadPoints(squad);
+    squads.forEach((squad, idx) => {
+      if (idx > 0 && y > margin) {
+        // Draw a separator line between squads (but not at the top of a new page)
+        doc.setDrawColor(180, 180, 180);
+        doc.setLineWidth(1);
+        doc.line(margin, y, pageWidth - margin, y);
+        y += 16; // Add more space after the line for clarity
+      }
 
-      // Squad header
-      doc.setFillColor(...cardBg);
-      doc.setDrawColor(...cardBorder);
-      doc.roundedRect(margin, y, pageWidth - margin * 2, 0, 8, 8, 'F'); // Height 0 for now, will fill later
+      // Estimate height needed for squad name and first unit
+      let estimatedSquadBlockHeight = lineHeight;
+      if (squad.units.length > 0) {
+        let firstUnit = squad.units[0];
+        let unitBlockHeight = lineHeight - 2;
+        const firstKeywords = squadFields.filter(f => f.type === 'switch' && f.id !== 'isMinifigure' && firstUnit[f.id]).map(f => f.label).join(', ');
+        if (firstKeywords) unitBlockHeight += 13;
+        if (firstUnit.specialties?.length > 0) unitBlockHeight += 10;
+        unitBlockHeight += 40; // estimate for stats table
+        estimatedSquadBlockHeight += unitBlockHeight;
+      }
+      const pageHeight = doc.internal.pageSize.getHeight();
+      if (y + estimatedSquadBlockHeight > pageHeight - margin) {
+        doc.addPage();
+        y = margin;
+      }
+
+      // Now draw the squad name
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(15);
       doc.setTextColor(30, 30, 30);
-      doc.text(`${squad.name} [${squad.units.length}] • ${squadPoints}Ü`, margin + cardPadding, cardContentY);
-      cardContentY += lineHeight;
+      doc.text(`${squad.name} [${squad.units.length}] • ${calculateSquadPoints(squad)}Ü`, margin + cardPadding, y);
+      y += lineHeight;
 
       // Units
       squad.units.forEach((unit) => {
-        // Unit name and keywords
+        // Estimate height needed for unit header and table
+        let estimatedHeight = lineHeight - 2;
+        const keywords = squadFields.filter(f => f.type === 'switch' && f.id !== 'isMinifigure' && unit[f.id]).map(f => f.label).join(', ');
+        if (keywords) estimatedHeight += 13;
+        if (unit.specialties?.length > 0) estimatedHeight += 10;
+        estimatedHeight += 40; // estimate for stats table
+
+        const pageHeight = doc.internal.pageSize.getHeight();
+        if (y + estimatedHeight > pageHeight - margin) {
+          doc.addPage();
+          y = margin;
+        }
+
+        // Store the unit name and y position
+        const unitName = `${unit.name || 'Unit'}${unit.unit_number ? ` [${unit.unit_number}]` : ''}`;
+        const unitNameX = margin + cardPadding + 8;
+        let unitNameY = y;
+
+        // Draw unit name and keywords/specialties as before
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(12);
         doc.setTextColor(50, 50, 50);
-        doc.text(`${unit.name || 'Unit'}${unit.unit_number ? ` [${unit.unit_number}]` : ''}`, margin + cardPadding + 8, cardContentY);
-        cardContentY += lineHeight - 2;
+        doc.text(unitName, unitNameX, unitNameY);
+        unitNameY += lineHeight - 2;
         // Keywords (from switches)
-        const keywords = squadFields.filter(f => f.type === 'switch' && f.id !== 'isMinifigure' && unit[f.id]).map(f => f.label).join(', ');
         if (keywords) {
           doc.setFont('helvetica', 'italic');
-          doc.setFontSize(10);
+          doc.setFontSize(8);
           doc.setTextColor(100, 100, 100);
-          doc.text(keywords, margin + cardPadding + 16, cardContentY);
-          cardContentY += 13;
+          doc.text(keywords, unitNameX + 16, unitNameY);
+          unitNameY += 13;
         }
+        // Add specialties
+        if (unit.specialties?.length > 0) {
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(8);
+          doc.setTextColor(50, 50, 50);
+          const specialties = unit.specialties.map(s => 
+            `${s.name}${s.cost !== 0 ? ` (${s.cost > 0 ? '+' : ''}${s.cost}Ü)` : ''}`
+          ).join(', ');
+          doc.text(specialties, unitNameX + 16, unitNameY);
+          unitNameY += 10;
+        }
+        let afterNameY = unitNameY;
         // --- UNIT STATS TABLE ---
         const statFields = squadFields.filter(f => f.type !== 'switch' && f.id !== 'equipment');
         const statLabels = statFields.map(f => f.label);
@@ -553,7 +667,7 @@ export default function Home() {
           return unit[f.id] || '';
         });
         autoTable(doc, {
-          startY: cardContentY,
+          startY: afterNameY,
           head: [statLabels],
           body: [statValues],
           theme: 'grid',
@@ -573,11 +687,21 @@ export default function Home() {
             lineWidth: 0.1,
           },
           margin: { left: margin + cardPadding + 8, right: margin + cardPadding + 8 },
+          didDrawPage: (data) => {
+            // Only draw if this is not the first page, or if the table is at the top of the page
+            if (data.pageNumber > 1 || data.settings.startY < afterNameY) {
+              doc.setFont('helvetica', 'bold');
+              doc.setFontSize(12);
+              doc.setTextColor(50, 50, 50);
+              doc.text(unitName, unitNameX, data.settings.margin.top);
+              // Optionally, re-draw keywords/specialties here as well
+            }
+          }
         });
-        let lastTableY = doc.lastAutoTable.finalY ? doc.lastAutoTable.finalY + 2 : cardContentY + 24;
-        cardContentY = lastTableY;
+        let lastTableY = doc.lastAutoTable.finalY ? doc.lastAutoTable.finalY + 2 : afterNameY + 24;
+        y = lastTableY;
         // --- WEAPONS & EQUIPMENT TABLES SIDE BY SIDE ---
-        const tableStartY = cardContentY;
+        const tableStartY = y;
         const tableWidth = (pageWidth - margin * 2 - cardPadding * 2 - 16) / 2; // 16px gap between tables
 
         let lastWeaponTableY = tableStartY;
@@ -655,20 +779,10 @@ export default function Home() {
           lastEquipmentTableY = doc.lastAutoTable.finalY ? doc.lastAutoTable.finalY + 2 : tableStartY + 20;
         }
 
-        // Set cardContentY to the max Y of both tables
-        cardContentY = Math.max(cardContentY, lastWeaponTableY, lastEquipmentTableY);
-        cardContentY += 10;
+        // Set y to the max Y of both tables
+        y = Math.max(y, lastWeaponTableY, lastEquipmentTableY);
+        y += 10;
       });
-      // Draw card border with correct height
-      cardHeight = cardContentY - cardStartY + cardPadding;
-      doc.setDrawColor(...cardBorder);
-      doc.roundedRect(margin, cardStartY, pageWidth - margin * 2, cardHeight, 8, 8);
-      y = cardStartY + cardHeight + cardSpacing;
-      // Add new page if close to bottom
-      if (y > doc.internal.pageSize.getHeight() - 120) {
-        doc.addPage();
-        y = 48;
-      }
     });
 
     // --- SPECIAL RULES SECTION (at end) ---
@@ -930,35 +1044,28 @@ export default function Home() {
           <CardContent>
             {selectedSquadData ? (
               <Tabs defaultValue="unit" className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
+                <TabsList className="grid w-full grid-cols-4">
                   <TabsTrigger value="unit">Unit</TabsTrigger>
                   <TabsTrigger 
                     value="weapons" 
                     disabled={!selectedUnit}
                     className={!selectedUnit ? "opacity-50 cursor-not-allowed" : ""}
                   >
-                    <div className="flex items-center gap-2">
-                      Weapons
-                      {!selectedUnit && (
-                        <span className="text-xs bg-muted px-1.5 py-0.5 rounded-full">
-                          Locked
-                        </span>
-                      )}
-                    </div>
+                    Weapons
                   </TabsTrigger>
                   <TabsTrigger 
                     value="equipment" 
                     disabled={!selectedUnit}
                     className={!selectedUnit ? "opacity-50 cursor-not-allowed" : ""}
                   >
-                    <div className="flex items-center gap-2">
-                      Equipment
-                      {!selectedUnit && (
-                        <span className="text-xs bg-muted px-1.5 py-0.5 rounded-full">
-                          Locked
-                        </span>
-                      )}
-                    </div>
+                    Equipment
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="specialties" 
+                    disabled={!selectedUnit}
+                    className={!selectedUnit ? "opacity-50 cursor-not-allowed" : ""}
+                  >
+                    Specialties
                   </TabsTrigger>
                 </TabsList>
                 <TabsContent value="unit" className="space-y-4">
@@ -1274,6 +1381,83 @@ export default function Home() {
                     </div>
                   )}
                 </TabsContent>
+                <TabsContent value="specialties" className="space-y-4">
+                  {selectedUnit ? (
+                    <>
+                      <form onSubmit={handleAddSpecialty} className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="specialtyType">Specialty</Label>
+                          <Select
+                            id="specialtyType"
+                            value={specialtyForm.type}
+                            onValueChange={(value) => setSpecialtyForm({ type: value })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select specialty" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {Object.entries(specialtyGroups).map(([group, specialties]) => (
+                                <SelectGroup key={group}>
+                                  <SelectLabel>{group}</SelectLabel>
+                                  {Object.entries(specialties).map(([type, specialty]) => (
+                                    <SelectItem key={`${group}:${type}`} value={`${group}:${type}`}>
+                                      {specialty.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectGroup>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <Button type="submit" className="w-full">
+                          Add Specialty
+                        </Button>
+                      </form>
+
+                      <div className="space-y-2 mt-4">
+                        <h4 className="font-medium">Current Specialties</h4>
+                        <div className="max-h-[200px] overflow-y-auto">
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead className="text-right">Actions</TableHead>
+                                <TableHead>Name</TableHead>
+                                <TableHead>Description</TableHead>
+                                <TableHead>Cost</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {selectedSquadData.units
+                                .find((u) => u.id === selectedUnit)
+                                ?.specialties?.map((specialty) => (
+                                  <TableRow key={specialty.id}>
+                                    <TableCell className="text-left">
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => handleDeleteSpecialty(specialty.id)}
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                    </TableCell>
+                                    <TableCell>{specialty.name}</TableCell>
+                                    <TableCell>{specialty.description}</TableCell>
+                                    <TableCell>{specialty.cost}Ü</TableCell>
+                                  </TableRow>
+                                ))}
+                            </TableBody>
+                          </Table>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex items-center justify-center h-32 border-2 border-dashed rounded-lg">
+                      <p className="text-sm text-muted-foreground">
+                        Select a unit to manage specialties
+                      </p>
+                    </div>
+                  )}
+                </TabsContent>
               </Tabs>
             ) : (
               <div className="flex items-center justify-center h-32 border-2 border-dashed rounded-lg">
@@ -1432,7 +1616,7 @@ export default function Home() {
                           </TableCell>
                         </TableRow>
                         {/* Add keywords row */}
-                        {squadFields.filter(f => f.type === 'switch' && f.id !== 'isMinifigure' && unit[f.id]).length > 0 && (
+                        {squadFields.filter(f => f.type === 'switch' && f.id !== 'isMinifigure' && f.id !== 'hasDeflection' && unit[f.id]).length > 0 && (
                           <TableRow>
                             <TableCell
                               colSpan={
@@ -1445,9 +1629,59 @@ export default function Home() {
                             >
                               <div className="text-sm text-muted-foreground italic">
                                 {squadFields
-                                  .filter(f => f.type === 'switch' && f.id !== 'isMinifigure' && unit[f.id])
+                                  .filter(f => f.type === 'switch' && f.id !== 'isMinifigure' && f.id !== 'hasDeflection' && unit[f.id])
                                   .map(f => f.label)
                                   .join(', ')}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        )}
+                        {/* Add deflection tag */}
+                        {unit.hasDeflection && (
+                          <TableRow>
+                            <TableCell
+                              colSpan={
+                                squadFields.filter(
+                                  (field) =>
+                                    field.type !== "switch" &&
+                                    field.id !== "equipment"
+                                ).length + 1
+                              }
+                            >
+                              <div className="flex flex-wrap gap-2">
+                                <div className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary text-primary-foreground hover:bg-primary/80">
+                                  Has Deflection
+                                </div>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        )}
+                        {/* Add specialties row */}
+                        {unit.specialties?.length > 0 && (
+                          <TableRow>
+                            <TableCell
+                              colSpan={
+                                squadFields.filter(
+                                  (field) =>
+                                    field.type !== "switch" &&
+                                    field.id !== "equipment"
+                                ).length + 1
+                              }
+                            >
+                              <div className="flex flex-wrap gap-2">
+                                {unit.specialties.map((specialty) => (
+                                  <div
+                                    key={specialty.id}
+                                    className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary text-primary-foreground hover:bg-primary/80"
+                                  >
+                                    {specialty.name}
+                                    {specialty.cost !== 0 && (
+                                      <span className="ml-1">
+                                        {specialty.cost > 0 ? '+' : ''}{specialty.cost}Ü
+                                      </span>
+                                    )}
+                                  </div>
+                                ))}
                               </div>
                             </TableCell>
                           </TableRow>
