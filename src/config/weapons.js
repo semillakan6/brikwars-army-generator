@@ -92,7 +92,7 @@ export const weaponTypes = [
     baseUse: 1,
     sizeRange: 0,
     baseRange: "CC",
-    damage: "Skill die",
+    damage: " Skill die",
     damageMulSize: true,
     usePower: true,
     notes: "-"

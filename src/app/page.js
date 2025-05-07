@@ -37,7 +37,7 @@ import {
 } from "@/components/ui/table";
 import { Separator } from "@/components/ui/separator";
 import { Plus, Trash2, Download, Upload } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { squadFields } from "@/config/squad-fields";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -49,8 +49,91 @@ import ValueIcon from "@/assets/icons/value.svg";
 import ArmorIcon from "@/assets/icons/armour.svg";
 import ActionIcon from "@/assets/icons/mind.svg";
 import MoveRangeIcon from "@/assets/icons/move_range.svg";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+
+// Import equipment types
+const equipment_types = [
+  {
+    name: "D4 Energy Shield",
+    notes: "x energy D4 shield dice",
+    sizeCost: 1,
+    baseCost: 0,
+    usePower: true,
+    remark: "The shield must be created by a Shield Projector somewhere on the surface of the Creation, Shield size (amount) dictates the number of shield dice available (strength), and it can only stop a dice equal to the shields dice. (<a  target=\"_blank\" class=\"ref\" href=\"https://brikwars.com/rules/2020/f.htm#energyshields\">Chapter F: Field Hazards</a>).",
+  },
+  {
+    name: "D6 Energy Shield",
+    notes: "x energy D6 shield dice",
+    sizeCost: 1,
+    baseCost: 0,
+    usePower: true,
+    remark: "The shield must be created by a Shield Projector somewhere on the surface of the Creation, Shield size (amount) dictates the number of shield dice available (strength), and it can only stop a dice equal to the shields dice. (<a  target=\"_blank\" class=\"ref\" href=\"https://brikwars.com/rules/2020/f.htm#energyshields\">Chapter F: Field Hazards</a>).",
+  },
+  {
+    name: "D8 Energy Shield",
+    notes: "x energy D8 shield dice",
+    sizeCost: 1,
+    baseCost: 0,
+    usePower: true,
+    remark: "The shield must be created by a Shield Projector somewhere on the surface of the Creation, Shield size (amount) dictates the number of shield dice available (strength), and it can only stop a dice equal to the shields dice. (<a  target=\"_blank\" class=\"ref\" href=\"https://brikwars.com/rules/2020/f.htm#energyshields\">Chapter F: Field Hazards</a>).",
+  },
+  {
+    name: "D10 Energy Shield",
+    notes: "x energy D10 shield dice",
+    sizeCost: 1,
+    baseCost: 0,
+    usePower: true,
+    remark: "The shield must be created by a Shield Projector somewhere on the surface of the Creation, Shield size (amount) dictates the number of shield dice available (strength), and it can only stop a dice equal to the shields dice. (<a  target=\"_blank\" class=\"ref\" href=\"https://brikwars.com/rules/2020/f.htm#energyshields\">Chapter F: Field Hazards</a>).",
+  },
+  {
+    name: "D12 Energy Shield",
+    notes: "x energy D12 shield dice",
+    sizeCost: 1,
+    baseCost: 0,
+    usePower: true,
+    remark: "The shield must be created by a Shield Projector somewhere on the surface of the Creation, Shield size (amount) dictates the number of shield dice available (strength), and it can only stop a dice equal to the shields dice. (<a  target=\"_blank\" class=\"ref\" href=\"https://brikwars.com/rules/2020/f.htm#energyshields\">Chapter F: Field Hazards</a>).",
+  },
+  {
+    name: "D20 Energy Shield",
+    notes: "x energy D20 shield dice",
+    sizeCost: 1,
+    baseCost: 0,
+    usePower: true,
+    remark: "The shield must be created by a Shield Projector somewhere on the surface of the Creation, Shield size (amount) dictates the number of shield dice available (strength), and it can only stop a dice equal to the shields dice. (<a  target=\"_blank\" class=\"ref\" href=\"https://brikwars.com/rules/2020/f.htm#energyshields\">Chapter F: Field Hazards</a>).",
+  },
+  {
+    name: "Light Armor",
+    notes: "+2 to Armor against all incoming damage (but not for internal damage).",
+    strength: 1,
+    sizeCost: 1,
+    baseCost: 1,
+    lightArmor: true,
+    remark: "Wearer can't swim.",
+  },
+  {
+    name: "Heavy Armor",
+    notes: "Has Deflection against the blow.",
+    strength: 1,
+    sizeCost: 1,
+    baseCost: 1,
+    heavyArmor: true,
+    remark: "Half Speed, wearer can't swim.",
+  }
+];
+
+// Add a stable ID generator
+let nextId = 1;
+const generateId = () => {
+  return nextId++;
+};
 
 export default function Home() {
+  const [mounted, setMounted] = React.useState(false);
   const [armyName, setArmyName] = useState("");
   const [armyRules, setArmyRules] = useState("");
   const [squads, setSquads] = useState([]);
@@ -70,6 +153,13 @@ export default function Home() {
   });
   const [showBastardWeapons, setShowBastardWeapons] = useState(false);
 
+  // Equipment state and handlers
+  const [equipmentForm, setEquipmentForm] = useState({
+    type: "",
+    size: 1,
+    notes: "",
+  });
+
   // Initialize unit form with default values from squadFields
   const initialUnitForm = squadFields.reduce((acc, field) => {
     acc[field.id] = field.type === "switch" ? false : "";
@@ -78,12 +168,16 @@ export default function Home() {
 
   const [unitForm, setUnitForm] = useState(initialUnitForm);
 
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const handleAddSquad = () => {
     if (newSquadName.trim()) {
       const newSquad = {
         name: newSquadName,
         units: [],
-        id: Date.now(),
+        id: generateId(),
       };
       setSquads([...squads, newSquad]);
       setNewSquadName("");
@@ -106,7 +200,7 @@ export default function Home() {
 
     const newUnit = {
       ...unitForm,
-      id: Date.now(),
+      id: generateId(),
       weapons: [], // Initialize empty weapons array
     };
 
@@ -120,8 +214,8 @@ export default function Home() {
       return squad;
     });
     setSquads(updatedSquads);
-    setUnitForm(initialUnitForm);
     setSelectedUnit(newUnit.id); // Select the newly created unit
+    // Don't clear the form data, keep it to show the unit is selected
   };
 
   const handleUpdateUnit = (e) => {
@@ -133,7 +227,14 @@ export default function Home() {
         return {
           ...squad,
           units: squad.units.map((unit) =>
-            unit.id === selectedUnit ? { ...unitForm, id: unit.id } : unit
+            unit.id === selectedUnit 
+              ? { 
+                  ...unit, // Preserve existing unit properties
+                  ...unitForm, // Update with new form values
+                  weapons: unit.weapons || [], // Preserve weapons
+                  equipment: unit.equipment || [], // Preserve equipment
+                } 
+              : unit
           ),
         };
       }
@@ -201,7 +302,14 @@ export default function Home() {
     if (!type) return { use: 0, range: 0, damage: "" };
 
     const use = type.sizeUse * size + type.baseUse;
-    const range = type.sizeRange * size + type.baseRange;
+    let range;
+    if (type.baseRange === "CC") {
+      range = "CC";
+    } else if (typeof type.baseRange === "string" && type.baseRange.includes("CC or")) {
+      range = type.baseRange;
+    } else {
+      range = type.sizeRange * size + type.baseRange;
+    }
     const damage = type.damageMulSize ? `${size}${type.damage}` : type.damage;
 
     return { use, range, damage };
@@ -233,6 +341,93 @@ export default function Home() {
     });
   };
 
+  const handleEquipmentTypeChange = (type) => {
+    const selectedEquipment = equipment_types.find(e => e.name === type);
+    setEquipmentForm({
+      ...equipmentForm,
+      type,
+      notes: selectedEquipment?.notes || "",
+      size: selectedEquipment?.lightArmor || selectedEquipment?.heavyArmor ? 1 : equipmentForm.size, // Force size to 1 for armor
+    });
+  };
+
+  const handleAddEquipment = (e) => {
+    e.preventDefault();
+    if (!selectedSquad || !selectedUnit) return;
+
+    const selectedEquipment = equipment_types.find(e => e.name === equipmentForm.type);
+    if (!selectedEquipment) return;
+
+    // Check if unit already has armor
+    if (selectedEquipment.lightArmor || selectedEquipment.heavyArmor) {
+      const unit = selectedSquadData.units.find(u => u.id === selectedUnit);
+      const hasArmor = unit?.equipment?.some(e => {
+        const eq = equipment_types.find(et => et.name === e.type);
+        return eq?.lightArmor || eq?.heavyArmor;
+      });
+      
+      if (hasArmor) {
+        alert("A unit can only have one type of armor.");
+        return;
+      }
+    }
+
+    const newEquipment = {
+      ...equipmentForm,
+      id: generateId(),
+      cost: (selectedEquipment.sizeCost * equipmentForm.size + selectedEquipment.baseCost),
+      usePower: selectedEquipment.usePower,
+      remark: selectedEquipment.remark,
+    };
+
+    const updatedSquads = squads.map((squad) => {
+      if (squad.id === selectedSquad) {
+        return {
+          ...squad,
+          units: squad.units.map((unit) => {
+            if (unit.id === selectedUnit) {
+              return {
+                ...unit,
+                equipment: [...(unit.equipment || []), newEquipment],
+              };
+            }
+            return unit;
+          }),
+        };
+      }
+      return squad;
+    });
+    setSquads(updatedSquads);
+    setEquipmentForm({
+      type: "",
+      size: 1,
+      notes: "",
+    });
+  };
+
+  const handleDeleteEquipment = (equipmentId) => {
+    if (!selectedSquad || !selectedUnit) return;
+
+    const updatedSquads = squads.map((squad) => {
+      if (squad.id === selectedSquad) {
+        return {
+          ...squad,
+          units: squad.units.map((unit) => {
+            if (unit.id === selectedUnit) {
+              return {
+                ...unit,
+                equipment: unit.equipment?.filter((e) => e.id !== equipmentId) || [],
+              };
+            }
+            return unit;
+          }),
+        };
+      }
+      return squad;
+    });
+    setSquads(updatedSquads);
+  };
+
   const handleAddWeapon = (e) => {
     e.preventDefault();
     if (!selectedSquad || !selectedUnit) return;
@@ -247,7 +442,7 @@ export default function Home() {
                 ...unit,
                 weapons: [
                   ...(unit.weapons || []),
-                  { ...weaponForm, id: Date.now() },
+                  { ...weaponForm, id: generateId() },
                 ],
               };
             }
@@ -309,7 +504,7 @@ export default function Home() {
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(22);
     doc.setTextColor(30, 30, 30);
-    doc.text(`${armyName || 'Unnamed Army'} • ${calculateTotalPoints()}pts`, margin, y);
+    doc.text(`${armyName || 'Unnamed Army'} • ${calculateTotalPoints()}Ü`, margin, y);
     y += lineHeight + 6;
 
     // --- SQUADS/UNITS ---
@@ -327,7 +522,7 @@ export default function Home() {
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(15);
       doc.setTextColor(30, 30, 30);
-      doc.text(`${squad.name} [${squad.units.length}] • ${squadPoints}pts`, margin + cardPadding, cardContentY);
+      doc.text(`${squad.name} [${squad.units.length}] • ${squadPoints}Ü`, margin + cardPadding, cardContentY);
       cardContentY += lineHeight;
 
       // Units
@@ -381,7 +576,13 @@ export default function Home() {
         });
         let lastTableY = doc.lastAutoTable.finalY ? doc.lastAutoTable.finalY + 2 : cardContentY + 24;
         cardContentY = lastTableY;
-        // --- WEAPONS TABLE ---
+        // --- WEAPONS & EQUIPMENT TABLES SIDE BY SIDE ---
+        const tableStartY = cardContentY;
+        const tableWidth = (pageWidth - margin * 2 - cardPadding * 2 - 16) / 2; // 16px gap between tables
+
+        let lastWeaponTableY = tableStartY;
+        let lastEquipmentTableY = tableStartY;
+
         if (unit.weapons?.length > 0) {
           const weaponsData = unit.weapons.map((weapon) => [
             weapon.name || weapon.type,
@@ -392,7 +593,7 @@ export default function Home() {
             weapon.damage,
           ]);
           autoTable(doc, {
-            startY: cardContentY,
+            startY: tableStartY,
             head: [["Weapon", "Size", "Amount", "Use", "Range", "Damage"]],
             body: weaponsData,
             theme: 'grid',
@@ -409,12 +610,53 @@ export default function Home() {
               lineColor: 220,
               lineWidth: 0.1,
             },
-            margin: { left: margin + cardPadding + 24, right: margin + cardPadding + 8 },
+            margin: { 
+              left: margin + cardPadding + 8, 
+              right: margin + cardPadding + 8 + tableWidth 
+            },
+            tableWidth: tableWidth,
+            pageBreak: 'avoid',
           });
-          lastTableY = doc.lastAutoTable.finalY ? doc.lastAutoTable.finalY + 2 : cardContentY + 20;
+          lastWeaponTableY = doc.lastAutoTable.finalY ? doc.lastAutoTable.finalY + 2 : tableStartY + 20;
         }
-        // Always set cardContentY to the max of itself and lastTableY
-        cardContentY = Math.max(cardContentY, lastTableY);
+
+        if (unit.equipment?.length > 0) {
+          const equipmentData = unit.equipment.map((equipment) => [
+            equipment.type,
+            equipment.size,
+            equipment.notes,
+            equipment.cost,
+          ]);
+          autoTable(doc, {
+            startY: tableStartY,
+            head: [["Equipment", "Size", "Notes", "Cost"]],
+            body: equipmentData,
+            theme: 'grid',
+            headStyles: {
+              fillColor: tableHeaderBg,
+              textColor: tableHeaderText,
+              fontStyle: 'bold',
+              fontSize: 8,
+            },
+            styles: {
+              fontSize: 8,
+              textColor: 80,
+              cellPadding: 2,
+              lineColor: 220,
+              lineWidth: 0.1,
+            },
+            margin: { 
+              left: margin + cardPadding + 8 + tableWidth + 16, // 16px gap
+              right: margin + cardPadding + 8 
+            },
+            tableWidth: tableWidth,
+            pageBreak: 'avoid',
+          });
+          lastEquipmentTableY = doc.lastAutoTable.finalY ? doc.lastAutoTable.finalY + 2 : tableStartY + 20;
+        }
+
+        // Set cardContentY to the max Y of both tables
+        cardContentY = Math.max(cardContentY, lastWeaponTableY, lastEquipmentTableY);
         cardContentY += 10;
       });
       // Draw card border with correct height
@@ -601,6 +843,10 @@ export default function Home() {
   };
   
 
+  if (!mounted) {
+    return null; // or a loading state
+  }
+
   return (
     <main className="container mx-auto p-4">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
@@ -668,8 +914,8 @@ export default function Home() {
         </div>
       </div>
 
-      <div className={`grid grid-cols-1 md:grid-cols-2 ${selectedUnit ? 'lg:grid-cols-3' : 'lg:grid-cols-2'} gap-6`}>
-        {/* Left Column - Unit Form */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left Column - Forms in Tabs */}
         <Card>
           <CardHeader>
             <CardTitle>Unit Management</CardTitle>
@@ -683,35 +929,352 @@ export default function Home() {
           </CardHeader>
           <CardContent>
             {selectedSquadData ? (
-              <div className="space-y-6">
-                <form
-                  onSubmit={selectedUnit ? handleUpdateUnit : handleAddUnit}
-                  className="space-y-4"
-                >
-                  {squadFields
-                    .filter((field) => field.id !== "equipment")
-                    .map((field) => (
-                      <div key={field.id} className="space-y-2">
-                        {renderField(field)}
-                      </div>
-                    ))}
+              <Tabs defaultValue="unit" className="w-full">
+                <TabsList className="grid w-full grid-cols-3">
+                  <TabsTrigger value="unit">Unit</TabsTrigger>
+                  <TabsTrigger 
+                    value="weapons" 
+                    disabled={!selectedUnit}
+                    className={!selectedUnit ? "opacity-50 cursor-not-allowed" : ""}
+                  >
+                    <div className="flex items-center gap-2">
+                      Weapons
+                      {!selectedUnit && (
+                        <span className="text-xs bg-muted px-1.5 py-0.5 rounded-full">
+                          Locked
+                        </span>
+                      )}
+                    </div>
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="equipment" 
+                    disabled={!selectedUnit}
+                    className={!selectedUnit ? "opacity-50 cursor-not-allowed" : ""}
+                  >
+                    <div className="flex items-center gap-2">
+                      Equipment
+                      {!selectedUnit && (
+                        <span className="text-xs bg-muted px-1.5 py-0.5 rounded-full">
+                          Locked
+                        </span>
+                      )}
+                    </div>
+                  </TabsTrigger>
+                </TabsList>
+                <TabsContent value="unit" className="space-y-4">
+                  <form
+                    onSubmit={selectedUnit ? handleUpdateUnit : handleAddUnit}
+                    className="space-y-4"
+                  >
+                    {squadFields
+                      .filter((field) => field.id !== "equipment")
+                      .map((field) => (
+                        <div key={field.id} className="space-y-2">
+                          {renderField(field)}
+                        </div>
+                      ))}
 
-                  <div className="flex gap-2">
-                    <Button type="submit" className="flex-1">
-                      {selectedUnit ? "Update Unit" : "Add Unit"}
-                    </Button>
-                    {selectedUnit && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={handleUnselectUnit}
-                      >
-                        Cancel
+                    <div className="flex gap-2">
+                      <Button type="submit" className="flex-1">
+                        {selectedUnit ? "Update Unit" : "Add Unit"}
                       </Button>
-                    )}
-                  </div>
-                </form>
-              </div>
+                      {selectedUnit && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={handleUnselectUnit}
+                        >
+                          Cancel
+                        </Button>
+                      )}
+                    </div>
+                  </form>
+                </TabsContent>
+                <TabsContent value="weapons" className="space-y-4">
+                  {selectedUnit ? (
+                    <>
+                      <form onSubmit={handleAddWeapon} className="space-y-4">
+                        <div className="flex items-center gap-2 mb-4">
+                          <Switch
+                            checked={showBastardWeapons}
+                            onCheckedChange={setShowBastardWeapons}
+                          />
+                          <Label>Show Bastard Weapons</Label>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="weaponType">Type</Label>
+                            <Select
+                              id="weaponType"
+                              value={weaponForm.type}
+                              onValueChange={handleWeaponTypeChange}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select weapon type" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {weaponTypes
+                                  .filter(weapon => 
+                                    (showBastardWeapons && weapon.category === "Bastard") || 
+                                    (!showBastardWeapons && weapon.category !== "Bastard")
+                                  )
+                                  .map((weapon) => (
+                                    <SelectItem
+                                      key={weapon.name}
+                                      value={weapon.name}
+                                    >
+                                      {weapon.name}
+                                    </SelectItem>
+                                  ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="weaponSize">Size</Label>
+                            <Input
+                              id="weaponSize"
+                              type="number"
+                              min="1"
+                              value={weaponForm.size}
+                              onChange={(e) =>
+                                handleWeaponSizeChange(parseInt(e.target.value))
+                              }
+                              disabled={weaponTypes.find(w => w.name === weaponForm.type)?.size !== undefined}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="weaponAmount">Amount</Label>
+                            <Input
+                              id="weaponAmount"
+                              type="number"
+                              min="1"
+                              value={weaponForm.amount}
+                              onChange={(e) =>
+                                setWeaponForm({
+                                  ...weaponForm,
+                                  amount: parseInt(e.target.value),
+                                })
+                              }
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="weaponName">Name</Label>
+                            <Input
+                              id="weaponName"
+                              value={weaponForm.name}
+                              onChange={(e) =>
+                                setWeaponForm({
+                                  ...weaponForm,
+                                  name: e.target.value,
+                                })
+                              }
+                              placeholder="Custom name (optional)"
+                            />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-3 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="weaponUse">Use</Label>
+                            <Input
+                              id="weaponUse"
+                              type="number"
+                              value={weaponForm.use}
+                              disabled
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="weaponRange">Range</Label>
+                            <Input 
+                              id="weaponRange"
+                              value={weaponForm.range} 
+                              disabled 
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="weaponDamage">Damage</Label>
+                            <Input 
+                              id="weaponDamage"
+                              value={weaponForm.damage} 
+                              disabled 
+                            />
+                          </div>
+                        </div>
+                        <Button type="submit" className="w-full">
+                          Add Weapon
+                        </Button>
+                      </form>
+
+                      <div className="space-y-2 mt-4">
+                        <h4 className="font-medium">Current Weapons</h4>
+                        <div className="max-h-[200px] overflow-y-auto">
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead className="text-right">
+                                  Actions
+                                </TableHead>
+                                <TableHead>Name</TableHead>
+                                <TableHead>Type</TableHead>
+                                <TableHead>Size</TableHead>
+                                <TableHead>Amount</TableHead>
+                                <TableHead>Use</TableHead>
+                                <TableHead>Range</TableHead>
+                                <TableHead>Damage</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {selectedSquadData.units
+                                .find((u) => u.id === selectedUnit)
+                                ?.weapons?.map((weapon) => (
+                                  <TableRow key={weapon.id}>
+                                    <TableCell className="text-left">
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() =>
+                                          handleDeleteWeapon(weapon.id)
+                                        }
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                    </TableCell>
+                                    <TableCell>
+                                      {weapon.name || weapon.type}
+                                    </TableCell>
+                                    <TableCell>{weapon.type}</TableCell>
+                                    <TableCell>{weapon.size}</TableCell>
+                                    <TableCell>{weapon.amount}</TableCell>
+                                    <TableCell>{weapon.use}</TableCell>
+                                    <TableCell>{weapon.range}</TableCell>
+                                    <TableCell>{weapon.damage}</TableCell>
+                                  </TableRow>
+                                ))}
+                            </TableBody>
+                          </Table>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex items-center justify-center h-32 border-2 border-dashed rounded-lg">
+                      <p className="text-sm text-muted-foreground">
+                        Select a unit to manage weapons
+                      </p>
+                    </div>
+                  )}
+                </TabsContent>
+                <TabsContent value="equipment" className="space-y-4">
+                  {selectedUnit ? (
+                    <>
+                      <form onSubmit={handleAddEquipment} className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="equipmentType">Type</Label>
+                            <Select
+                              id="equipmentType"
+                              value={equipmentForm.type}
+                              onValueChange={handleEquipmentTypeChange}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select equipment type" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {equipment_types.map((equipment) => (
+                                  <SelectItem
+                                    key={equipment.name}
+                                    value={equipment.name}
+                                  >
+                                    {equipment.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="equipmentSize">Amount</Label>
+                            <Input
+                              id="equipmentSize"
+                              type="number"
+                              min="1"
+                              placeholder="Enter size"
+                              value={equipmentForm.size}
+                              onChange={(e) =>
+                                setEquipmentForm({
+                                  ...equipmentForm,
+                                  size: parseInt(e.target.value),
+                                })
+                              }
+                              disabled={equipment_types.find(e => e.name === equipmentForm.type)?.lightArmor || 
+                                      equipment_types.find(e => e.name === equipmentForm.type)?.heavyArmor}
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="equipmentNotes">Notes</Label>
+                          <Input
+                            id="equipmentNotes"
+                            placeholder="Enter equipment notes"
+                            value={equipmentForm.notes}
+                            onChange={(e) =>
+                              setEquipmentForm({
+                                ...equipmentForm,
+                                notes: e.target.value,
+                              })
+                            }
+                            disabled
+                          />
+                        </div>
+                        <Button type="submit" className="w-full">
+                          Add Equipment
+                        </Button>
+                      </form>
+
+                      <div className="space-y-2 mt-4">
+                        <h4 className="font-medium">Current Equipment</h4>
+                        <div className="max-h-[200px] overflow-y-auto">
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead className="text-right">Actions</TableHead>
+                                <TableHead>Name</TableHead>
+                                <TableHead>Size</TableHead>
+                                <TableHead>Notes</TableHead>
+                                <TableHead>Cost</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {selectedSquadData.units
+                                .find((u) => u.id === selectedUnit)
+                                ?.equipment?.map((equipment) => (
+                                  <TableRow key={equipment.id}>
+                                    <TableCell className="text-left">
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => handleDeleteEquipment(equipment.id)}
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                    </TableCell>
+                                    <TableCell>{equipment.type}</TableCell>
+                                    <TableCell>{equipment.size}</TableCell>
+                                    <TableCell>{equipment.notes}</TableCell>
+                                    <TableCell>{equipment.cost}Ü</TableCell>
+                                  </TableRow>
+                                ))}
+                            </TableBody>
+                          </Table>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex items-center justify-center h-32 border-2 border-dashed rounded-lg">
+                      <p className="text-sm text-muted-foreground">
+                        Select a unit to manage equipment
+                      </p>
+                    </div>
+                  )}
+                </TabsContent>
+              </Tabs>
             ) : (
               <div className="flex items-center justify-center h-32 border-2 border-dashed rounded-lg">
                 <p className="text-sm text-muted-foreground">
@@ -722,8 +1285,8 @@ export default function Home() {
           </CardContent>
         </Card>
 
-        {/* Middle Column - Squads and Units List */}
-        <div className="space-y-4">
+        {/* Middle and Right Columns - Squads and Units List */}
+        <div className="lg:col-span-2 space-y-4">
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button className="w-full">
@@ -770,7 +1333,11 @@ export default function Home() {
                     <TableRow
                       key={squad.id}
                       className={selectedSquad === squad.id ? "bg-muted" : ""}
-                      onClick={() => setSelectedSquad(squad.id)}
+                      onClick={() => {
+                        setSelectedSquad(squad.id);
+                        setSelectedUnit(null);
+                        setUnitForm(initialUnitForm);
+                      }}
                     >
                       <TableCell className="font-medium">
                         {squad.name}
@@ -864,6 +1431,27 @@ export default function Home() {
                             </Button>
                           </TableCell>
                         </TableRow>
+                        {/* Add keywords row */}
+                        {squadFields.filter(f => f.type === 'switch' && f.id !== 'isMinifigure' && unit[f.id]).length > 0 && (
+                          <TableRow>
+                            <TableCell
+                              colSpan={
+                                squadFields.filter(
+                                  (field) =>
+                                    field.type !== "switch" &&
+                                    field.id !== "equipment"
+                                ).length + 1
+                              }
+                            >
+                              <div className="text-sm text-muted-foreground italic">
+                                {squadFields
+                                  .filter(f => f.type === 'switch' && f.id !== 'isMinifigure' && unit[f.id])
+                                  .map(f => f.label)
+                                  .join(', ')}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        )}
                         {unit.weapons?.length > 0 && (
                           <TableRow>
                             <TableCell
@@ -906,6 +1494,42 @@ export default function Home() {
                             </TableCell>
                           </TableRow>
                         )}
+                        {unit.equipment?.length > 0 && (
+                          <TableRow>
+                            <TableCell
+                              colSpan={
+                                squadFields.filter(
+                                  (field) =>
+                                    field.type !== "switch" &&
+                                    field.id !== "equipment"
+                                ).length + 1
+                              }
+                            >
+                              <div className="pl-4">
+                                <Table>
+                                  <TableHeader>
+                                    <TableRow>
+                                      <TableHead>Equipment</TableHead>
+                                      <TableHead>Size</TableHead>
+                                      <TableHead>Notes</TableHead>
+                                      <TableHead>Cost</TableHead>
+                                    </TableRow>
+                                  </TableHeader>
+                                  <TableBody>
+                                    {unit.equipment.map((equipment) => (
+                                      <TableRow key={equipment.id}>
+                                        <TableCell>{equipment.type}</TableCell>
+                                        <TableCell>{equipment.size}</TableCell>
+                                        <TableCell>{equipment.notes}</TableCell>
+                                        <TableCell>{equipment.cost}Ü</TableCell>
+                                      </TableRow>
+                                    ))}
+                                  </TableBody>
+                                </Table>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        )}
                       </React.Fragment>
                     ))}
                   </TableBody>
@@ -914,178 +1538,6 @@ export default function Home() {
             </Card>
           )}
         </div>
-
-        {/* Right Column - Weapon Form */}
-        {selectedUnit && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Weapon Management</CardTitle>
-              <CardDescription>
-                Add weapons to the selected unit
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleAddWeapon} className="space-y-4">
-                <div className="flex items-center gap-2 mb-4">
-                  <Switch
-                    checked={showBastardWeapons}
-                    onCheckedChange={setShowBastardWeapons}
-                  />
-                  <Label>Show Bastard Weapons</Label>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="weaponType">Type</Label>
-                    <Select
-                      id="weaponType"
-                      value={weaponForm.type}
-                      onValueChange={handleWeaponTypeChange}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select weapon type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {weaponTypes
-                          .filter(weapon => 
-                            (showBastardWeapons && weapon.category === "Bastard") || 
-                            (!showBastardWeapons && weapon.category !== "Bastard")
-                          )
-                          .map((weapon) => (
-                            <SelectItem
-                              key={weapon.name}
-                              value={weapon.name}
-                            >
-                              {weapon.name}
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="weaponSize">Size</Label>
-                    <Input
-                      id="weaponSize"
-                      type="number"
-                      min="1"
-                      value={weaponForm.size}
-                      onChange={(e) =>
-                        handleWeaponSizeChange(parseInt(e.target.value))
-                      }
-                      disabled={weaponTypes.find(w => w.name === weaponForm.type)?.size !== undefined}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="weaponAmount">Amount</Label>
-                    <Input
-                      id="weaponAmount"
-                      type="number"
-                      min="1"
-                      value={weaponForm.amount}
-                      onChange={(e) =>
-                        setWeaponForm({
-                          ...weaponForm,
-                          amount: parseInt(e.target.value),
-                        })
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="weaponName">Name</Label>
-                    <Input
-                      id="weaponName"
-                      value={weaponForm.name}
-                      onChange={(e) =>
-                        setWeaponForm({
-                          ...weaponForm,
-                          name: e.target.value,
-                        })
-                      }
-                      placeholder="Custom name (optional)"
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="weaponUse">Use</Label>
-                    <Input
-                      id="weaponUse"
-                      type="number"
-                      value={weaponForm.use}
-                      disabled
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="weaponRange">Range</Label>
-                    <Input 
-                      id="weaponRange"
-                      value={weaponForm.range} 
-                      disabled 
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="weaponDamage">Damage</Label>
-                    <Input 
-                      id="weaponDamage"
-                      value={weaponForm.damage} 
-                      disabled 
-                    />
-                  </div>
-                </div>
-                <Button type="submit" className="w-full">
-                  Add Weapon
-                </Button>
-              </form>
-
-              <div className="space-y-2 mt-4">
-                <h4 className="font-medium">Current Weapons</h4>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="text-right">
-                        Actions
-                      </TableHead>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Size</TableHead>
-                      <TableHead>Amount</TableHead>
-                      <TableHead>Use</TableHead>
-                      <TableHead>Range</TableHead>
-                      <TableHead>Damage</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {selectedSquadData.units
-                      .find((u) => u.id === selectedUnit)
-                      ?.weapons?.map((weapon) => (
-                        <TableRow key={weapon.id}>
-                        <TableCell className="text-left">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() =>
-                              handleDeleteWeapon(weapon.id)
-                            }
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </TableCell>
-                          <TableCell>
-                            {weapon.name || weapon.type}
-                          </TableCell>
-                          <TableCell>{weapon.type}</TableCell>
-                          <TableCell>{weapon.size}</TableCell>
-                          <TableCell>{weapon.amount}</TableCell>
-                          <TableCell>{weapon.use}</TableCell>
-                          <TableCell>{weapon.range}</TableCell>
-                          <TableCell>{weapon.damage}</TableCell>
-                        </TableRow>
-                      ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
-        )}
       </div>
     </main>
   );

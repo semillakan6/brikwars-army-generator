@@ -22,7 +22,7 @@ export const squadFields = [
   {
     id: "armor",
     label: "Armor",
-    type: "number",
+    type: "text",
     min: 0,
     max: 10,
     icon: "/icons/armour.svg"
@@ -40,6 +40,13 @@ export const squadFields = [
     label: "Is a minifigure?",
     type: "switch",
     required: false
+  },
+  {
+    id: "hasDeflection",
+    label: "Has Deflection",
+    type: "switch",
+    required: false,
+    icon: "/icons/armour.svg"
   },
   {
     id: "action",
