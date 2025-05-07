@@ -71,5 +71,12 @@ export const squadFields = [
     min: 1,
     max: 100,
     icon: "/icons/value.svg"
+  },
+  {
+    id: "custom_notes",
+    label: "Custom Notes",
+    type: "textarea",
+    placeholder: "Enter any custom equipment or specialty notes",
+    required: false
   }
 ]; 

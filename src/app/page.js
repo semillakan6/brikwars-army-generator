@@ -904,6 +904,22 @@ export default function Home() {
             />
           </div>
         );
+      case "textarea":
+        return (
+          <div className="flex flex-col gap-1">
+            <Label htmlFor={field.id}>{renderLabel(field)}</Label>
+            <textarea
+              id={field.id}
+              value={unitForm[field.id]}
+              onChange={(e) =>
+                setUnitForm({ ...unitForm, [field.id]: e.target.value })
+              }
+              placeholder={field.placeholder}
+              required={field.required}
+              className="min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            />
+          </div>
+        );
       case "switch":
         return (
           <div className="flex items-center gap-2">
@@ -1615,6 +1631,24 @@ export default function Home() {
                             </Button>
                           </TableCell>
                         </TableRow>
+                        {/* Add custom notes row */}
+                        {unit.custom_notes && (
+                          <TableRow>
+                            <TableCell
+                              colSpan={
+                                squadFields.filter(
+                                  (field) =>
+                                    field.type !== "switch" &&
+                                    field.id !== "equipment"
+                                ).length + 1
+                              }
+                            >
+                              <div className="text-sm text-muted-foreground">
+                                {unit.custom_notes}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        )}
                         {/* Add keywords row */}
                         {squadFields.filter(f => f.type === 'switch' && f.id !== 'isMinifigure' && f.id !== 'hasDeflection' && unit[f.id]).length > 0 && (
                           <TableRow>
