@@ -49,12 +49,7 @@ import ValueIcon from "@/assets/icons/value.svg";
 import ArmorIcon from "@/assets/icons/armour.svg";
 import ActionIcon from "@/assets/icons/mind.svg";
 import MoveRangeIcon from "@/assets/icons/move_range.svg";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { specialtyGroups } from "@/config/specialties";
 
 // Import equipment types
@@ -65,7 +60,8 @@ const equipment_types = [
     sizeCost: 1,
     baseCost: 0,
     usePower: true,
-    remark: "The shield must be created by a Shield Projector somewhere on the surface of the Creation, Shield size (amount) dictates the number of shield dice available (strength), and it can only stop a dice equal to the shields dice. (<a  target=\"_blank\" class=\"ref\" href=\"https://brikwars.com/rules/2020/f.htm#energyshields\">Chapter F: Field Hazards</a>).",
+    remark:
+      'The shield must be created by a Shield Projector somewhere on the surface of the Creation, Shield size (amount) dictates the number of shield dice available (strength), and it can only stop a dice equal to the shields dice. (<a  target="_blank" class="ref" href="https://brikwars.com/rules/2020/f.htm#energyshields">Chapter F: Field Hazards</a>).',
   },
   {
     name: "D6 Energy Shield",
@@ -73,7 +69,8 @@ const equipment_types = [
     sizeCost: 1,
     baseCost: 0,
     usePower: true,
-    remark: "The shield must be created by a Shield Projector somewhere on the surface of the Creation, Shield size (amount) dictates the number of shield dice available (strength), and it can only stop a dice equal to the shields dice. (<a  target=\"_blank\" class=\"ref\" href=\"https://brikwars.com/rules/2020/f.htm#energyshields\">Chapter F: Field Hazards</a>).",
+    remark:
+      'The shield must be created by a Shield Projector somewhere on the surface of the Creation, Shield size (amount) dictates the number of shield dice available (strength), and it can only stop a dice equal to the shields dice. (<a  target="_blank" class="ref" href="https://brikwars.com/rules/2020/f.htm#energyshields">Chapter F: Field Hazards</a>).',
   },
   {
     name: "D8 Energy Shield",
@@ -81,7 +78,8 @@ const equipment_types = [
     sizeCost: 1,
     baseCost: 0,
     usePower: true,
-    remark: "The shield must be created by a Shield Projector somewhere on the surface of the Creation, Shield size (amount) dictates the number of shield dice available (strength), and it can only stop a dice equal to the shields dice. (<a  target=\"_blank\" class=\"ref\" href=\"https://brikwars.com/rules/2020/f.htm#energyshields\">Chapter F: Field Hazards</a>).",
+    remark:
+      'The shield must be created by a Shield Projector somewhere on the surface of the Creation, Shield size (amount) dictates the number of shield dice available (strength), and it can only stop a dice equal to the shields dice. (<a  target="_blank" class="ref" href="https://brikwars.com/rules/2020/f.htm#energyshields">Chapter F: Field Hazards</a>).',
   },
   {
     name: "D10 Energy Shield",
@@ -89,7 +87,8 @@ const equipment_types = [
     sizeCost: 1,
     baseCost: 0,
     usePower: true,
-    remark: "The shield must be created by a Shield Projector somewhere on the surface of the Creation, Shield size (amount) dictates the number of shield dice available (strength), and it can only stop a dice equal to the shields dice. (<a  target=\"_blank\" class=\"ref\" href=\"https://brikwars.com/rules/2020/f.htm#energyshields\">Chapter F: Field Hazards</a>).",
+    remark:
+      'The shield must be created by a Shield Projector somewhere on the surface of the Creation, Shield size (amount) dictates the number of shield dice available (strength), and it can only stop a dice equal to the shields dice. (<a  target="_blank" class="ref" href="https://brikwars.com/rules/2020/f.htm#energyshields">Chapter F: Field Hazards</a>).',
   },
   {
     name: "D12 Energy Shield",
@@ -97,7 +96,8 @@ const equipment_types = [
     sizeCost: 1,
     baseCost: 0,
     usePower: true,
-    remark: "The shield must be created by a Shield Projector somewhere on the surface of the Creation, Shield size (amount) dictates the number of shield dice available (strength), and it can only stop a dice equal to the shields dice. (<a  target=\"_blank\" class=\"ref\" href=\"https://brikwars.com/rules/2020/f.htm#energyshields\">Chapter F: Field Hazards</a>).",
+    remark:
+      'The shield must be created by a Shield Projector somewhere on the surface of the Creation, Shield size (amount) dictates the number of shield dice available (strength), and it can only stop a dice equal to the shields dice. (<a  target="_blank" class="ref" href="https://brikwars.com/rules/2020/f.htm#energyshields">Chapter F: Field Hazards</a>).',
   },
   {
     name: "D20 Energy Shield",
@@ -105,11 +105,13 @@ const equipment_types = [
     sizeCost: 1,
     baseCost: 0,
     usePower: true,
-    remark: "The shield must be created by a Shield Projector somewhere on the surface of the Creation, Shield size (amount) dictates the number of shield dice available (strength), and it can only stop a dice equal to the shields dice. (<a  target=\"_blank\" class=\"ref\" href=\"https://brikwars.com/rules/2020/f.htm#energyshields\">Chapter F: Field Hazards</a>).",
+    remark:
+      'The shield must be created by a Shield Projector somewhere on the surface of the Creation, Shield size (amount) dictates the number of shield dice available (strength), and it can only stop a dice equal to the shields dice. (<a  target="_blank" class="ref" href="https://brikwars.com/rules/2020/f.htm#energyshields">Chapter F: Field Hazards</a>).',
   },
   {
     name: "Light Armor",
-    notes: "+2 to Armor against all incoming damage (but not for internal damage).",
+    notes:
+      "+2 to Armor against all incoming damage (but not for internal damage).",
     strength: 1,
     sizeCost: 1,
     baseCost: 1,
@@ -124,7 +126,39 @@ const equipment_types = [
     baseCost: 1,
     heavyArmor: true,
     remark: "Half Speed, wearer can't swim.",
-  }
+  },
+  {
+    name: "Small Thrusters",
+    notes: "1d4 Thrust",
+    sizeCost: 1,
+    baseCost: 0,
+    usePower: false,
+    remark: "",
+  },
+  {
+    name: "Medium Thrusters",
+    notes: "1d6 Thrust",
+    sizeCost: 1,
+    baseCost: 0,
+    usePower: false,
+    remark: "",
+  },
+  {
+    name: "Large Thrusters",
+    notes: "1d8 Thrust",
+    sizeCost: 1,
+    baseCost: 0,
+    usePower: false,
+    remark: "",
+  },
+  {
+    name: "Giant Thrusters",
+    notes: "1d10 Thrust",
+    sizeCost: 1,
+    baseCost: 0,
+    usePower: false,
+    remark: "",
+  },
 ];
 
 // Add a stable ID generator
@@ -234,13 +268,13 @@ export default function Home() {
         return {
           ...squad,
           units: squad.units.map((unit) =>
-            unit.id === selectedUnit 
-              ? { 
+            unit.id === selectedUnit
+              ? {
                   ...unit, // Preserve existing unit properties
                   ...unitForm, // Update with new form values
                   weapons: unit.weapons || [], // Preserve weapons
                   equipment: unit.equipment || [], // Preserve equipment
-                } 
+                }
               : unit
           ),
         };
@@ -291,7 +325,8 @@ export default function Home() {
   // Calculate total points for a squad
   const calculateSquadPoints = (squad) => {
     return squad.units.reduce(
-      (total, unit) => total + (calculateUnitPoints(unit) * (parseInt(unit.unit_number) || 1)),
+      (total, unit) =>
+        total + calculateUnitPoints(unit) * (parseInt(unit.unit_number) || 1),
       0
     );
   };
@@ -312,7 +347,10 @@ export default function Home() {
     let range;
     if (type.baseRange === "CC") {
       range = "CC";
-    } else if (typeof type.baseRange === "string" && type.baseRange.includes("CC or")) {
+    } else if (
+      typeof type.baseRange === "string" &&
+      type.baseRange.includes("CC or")
+    ) {
       range = type.baseRange;
     } else {
       range = type.sizeRange * size + type.baseRange;
@@ -323,8 +361,11 @@ export default function Home() {
   };
 
   const handleWeaponTypeChange = (type) => {
-    const selectedWeapon = weaponTypes.find(w => w.name === type);
-    const stats = calculateWeaponStats(type, selectedWeapon?.size || weaponForm.size);
+    const selectedWeapon = weaponTypes.find((w) => w.name === type);
+    const stats = calculateWeaponStats(
+      type,
+      selectedWeapon?.size || weaponForm.size
+    );
     setWeaponForm({
       ...weaponForm,
       type,
@@ -336,7 +377,7 @@ export default function Home() {
   };
 
   const handleWeaponSizeChange = (size) => {
-    const selectedWeapon = weaponTypes.find(w => w.name === weaponForm.type);
+    const selectedWeapon = weaponTypes.find((w) => w.name === weaponForm.type);
     if (selectedWeapon?.size) return; // Don't allow size change for fixed size weapons
     const stats = calculateWeaponStats(weaponForm.type, size);
     setWeaponForm({
@@ -349,12 +390,15 @@ export default function Home() {
   };
 
   const handleEquipmentTypeChange = (type) => {
-    const selectedEquipment = equipment_types.find(e => e.name === type);
+    const selectedEquipment = equipment_types.find((e) => e.name === type);
     setEquipmentForm({
       ...equipmentForm,
       type,
       notes: selectedEquipment?.notes || "",
-      size: selectedEquipment?.lightArmor || selectedEquipment?.heavyArmor ? 1 : equipmentForm.size, // Force size to 1 for armor
+      size:
+        selectedEquipment?.lightArmor || selectedEquipment?.heavyArmor
+          ? 1
+          : equipmentForm.size, // Force size to 1 for armor
     });
   };
 
@@ -362,17 +406,19 @@ export default function Home() {
     e.preventDefault();
     if (!selectedSquad || !selectedUnit) return;
 
-    const selectedEquipment = equipment_types.find(e => e.name === equipmentForm.type);
+    const selectedEquipment = equipment_types.find(
+      (e) => e.name === equipmentForm.type
+    );
     if (!selectedEquipment) return;
 
     // Check if unit already has armor
     if (selectedEquipment.lightArmor || selectedEquipment.heavyArmor) {
-      const unit = selectedSquadData.units.find(u => u.id === selectedUnit);
-      const hasArmor = unit?.equipment?.some(e => {
-        const eq = equipment_types.find(et => et.name === e.type);
+      const unit = selectedSquadData.units.find((u) => u.id === selectedUnit);
+      const hasArmor = unit?.equipment?.some((e) => {
+        const eq = equipment_types.find((et) => et.name === e.type);
         return eq?.lightArmor || eq?.heavyArmor;
       });
-      
+
       if (hasArmor) {
         alert("A unit can only have one type of armor.");
         return;
@@ -382,7 +428,9 @@ export default function Home() {
     const newEquipment = {
       ...equipmentForm,
       id: generateId(),
-      cost: (selectedEquipment.sizeCost * equipmentForm.size + selectedEquipment.baseCost),
+      cost:
+        selectedEquipment.sizeCost * equipmentForm.size +
+        selectedEquipment.baseCost,
       usePower: selectedEquipment.usePower,
       remark: selectedEquipment.remark,
     };
@@ -423,7 +471,8 @@ export default function Home() {
             if (unit.id === selectedUnit) {
               return {
                 ...unit,
-                equipment: unit.equipment?.filter((e) => e.id !== equipmentId) || [],
+                equipment:
+                  unit.equipment?.filter((e) => e.id !== equipmentId) || [],
               };
             }
             return unit;
@@ -505,7 +554,8 @@ export default function Home() {
             if (unit.id === selectedUnit) {
               return {
                 ...unit,
-                specialties: unit.specialties?.filter((s) => s.id !== specialtyId) || [],
+                specialties:
+                  unit.specialties?.filter((s) => s.id !== specialtyId) || [],
               };
             }
             return unit;
@@ -557,7 +607,7 @@ export default function Home() {
   };
 
   const handleExportPDF = () => {
-    const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+    const doc = new jsPDF({ unit: "pt", format: "a4" });
     const pageWidth = doc.internal.pageSize.getWidth();
     const margin = 32;
     let y = 48;
@@ -570,10 +620,14 @@ export default function Home() {
     const cardBorder = [200, 200, 200];
 
     // --- HEADER ---
-    doc.setFont('helvetica', 'bold');
+    doc.setFont("helvetica", "bold");
     doc.setFontSize(22);
     doc.setTextColor(30, 30, 30);
-    doc.text(`${armyName || 'Unnamed Army'} • ${calculateTotalPoints()}Ü`, margin, y);
+    doc.text(
+      `${armyName || "Unnamed Army"} • ${calculateTotalPoints()}Ü`,
+      margin,
+      y
+    );
     y += lineHeight + 6;
 
     // --- SQUADS/UNITS ---
@@ -591,7 +645,13 @@ export default function Home() {
       if (squad.units.length > 0) {
         let firstUnit = squad.units[0];
         let unitBlockHeight = lineHeight - 2;
-        const firstKeywords = squadFields.filter(f => f.type === 'switch' && f.id !== 'isMinifigure' && firstUnit[f.id]).map(f => f.label).join(', ');
+        const firstKeywords = squadFields
+          .filter(
+            (f) =>
+              f.type === "switch" && f.id !== "isMinifigure" && firstUnit[f.id]
+          )
+          .map((f) => f.label)
+          .join(", ");
         if (firstKeywords) unitBlockHeight += 13;
         if (firstUnit.specialties?.length > 0) unitBlockHeight += 10;
         unitBlockHeight += 40; // estimate for stats table
@@ -604,17 +664,28 @@ export default function Home() {
       }
 
       // Now draw the squad name
-      doc.setFont('helvetica', 'bold');
+      doc.setFont("helvetica", "bold");
       doc.setFontSize(15);
       doc.setTextColor(30, 30, 30);
-      doc.text(`${squad.name} [${squad.units.length}] • ${calculateSquadPoints(squad)}Ü`, margin + cardPadding, y);
+      doc.text(
+        `${squad.name} [${squad.units.length}] • ${calculateSquadPoints(
+          squad
+        )}Ü`,
+        margin + cardPadding,
+        y
+      );
       y += lineHeight;
 
       // Units
       squad.units.forEach((unit) => {
         // Estimate height needed for unit header and table
         let estimatedHeight = lineHeight - 2;
-        const keywords = squadFields.filter(f => f.type === 'switch' && f.id !== 'isMinifigure' && unit[f.id]).map(f => f.label).join(', ');
+        const keywords = squadFields
+          .filter(
+            (f) => f.type === "switch" && f.id !== "isMinifigure" && unit[f.id]
+          )
+          .map((f) => f.label)
+          .join(", ");
         if (keywords) estimatedHeight += 13;
         if (unit.specialties?.length > 0) estimatedHeight += 10;
         estimatedHeight += 40; // estimate for stats table
@@ -626,19 +697,21 @@ export default function Home() {
         }
 
         // Store the unit name and y position
-        const unitName = `${unit.name || 'Unit'}${unit.unit_number ? ` [${unit.unit_number}]` : ''}`;
+        const unitName = `${unit.name || "Unit"}${
+          unit.unit_number ? ` [${unit.unit_number}]` : ""
+        }`;
         const unitNameX = margin + cardPadding + 8;
         let unitNameY = y;
 
         // Draw unit name and keywords/specialties as before
-        doc.setFont('helvetica', 'bold');
+        doc.setFont("helvetica", "bold");
         doc.setFontSize(12);
         doc.setTextColor(50, 50, 50);
         doc.text(unitName, unitNameX, unitNameY);
         unitNameY += lineHeight - 2;
         // Keywords (from switches)
         if (keywords) {
-          doc.setFont('helvetica', 'italic');
+          doc.setFont("helvetica", "italic");
           doc.setFontSize(8);
           doc.setTextColor(100, 100, 100);
           doc.text(keywords, unitNameX + 16, unitNameY);
@@ -646,59 +719,73 @@ export default function Home() {
         }
         // Add specialties
         if (unit.specialties?.length > 0) {
-          doc.setFont('helvetica', 'bold');
+          doc.setFont("helvetica", "bold");
           doc.setFontSize(8);
           doc.setTextColor(50, 50, 50);
-          const specialties = unit.specialties.map(s => 
-            `${s.name}${s.cost !== 0 ? ` (${s.cost > 0 ? '+' : ''}${s.cost}Ü)` : ''}`
-          ).join(', ');
+          const specialties = unit.specialties
+            .map(
+              (s) =>
+                `${s.name}${
+                  s.cost !== 0 ? ` (${s.cost > 0 ? "+" : ""}${s.cost}Ü)` : ""
+                }`
+            )
+            .join(", ");
           doc.text(specialties, unitNameX + 16, unitNameY);
           unitNameY += 10;
         }
         let afterNameY = unitNameY;
         // --- UNIT STATS TABLE ---
-        const statFields = squadFields.filter(f => f.type !== 'switch' && f.id !== 'equipment');
-        const statLabels = statFields.map(f => f.label);
-        const statValues = statFields.map(f => {
-          if (f.type === 'select') {
-            const selectedOption = f.options.flatMap(g => g.items).find(i => i.value === unit[f.id]);
+        const statFields = squadFields.filter(
+          (f) => f.type !== "switch" && f.id !== "equipment"
+        );
+        const statLabels = statFields.map((f) => f.label);
+        const statValues = statFields.map((f) => {
+          if (f.type === "select") {
+            const selectedOption = f.options
+              .flatMap((g) => g.items)
+              .find((i) => i.value === unit[f.id]);
             return selectedOption ? selectedOption.label : unit[f.id];
           }
-          return unit[f.id] || '';
+          return unit[f.id] || "";
         });
         autoTable(doc, {
           startY: afterNameY,
           head: [statLabels],
           body: [statValues],
-          theme: 'grid',
+          theme: "grid",
           headStyles: {
             fillColor: tableHeaderBg,
             textColor: tableHeaderText,
-            fontStyle: 'bold',
+            fontStyle: "bold",
             fontSize: 9,
           },
           styles: {
             fontSize: 9,
             textColor: 60,
             cellPadding: 2.5,
-            halign: 'center',
-            valign: 'middle',
+            halign: "center",
+            valign: "middle",
             lineColor: 220,
             lineWidth: 0.1,
           },
-          margin: { left: margin + cardPadding + 8, right: margin + cardPadding + 8 },
+          margin: {
+            left: margin + cardPadding + 8,
+            right: margin + cardPadding + 8,
+          },
           didDrawPage: (data) => {
             // Only draw if this is not the first page, or if the table is at the top of the page
             if (data.pageNumber > 1 || data.settings.startY < afterNameY) {
-              doc.setFont('helvetica', 'bold');
+              doc.setFont("helvetica", "bold");
               doc.setFontSize(12);
               doc.setTextColor(50, 50, 50);
               doc.text(unitName, unitNameX, data.settings.margin.top);
               // Optionally, re-draw keywords/specialties here as well
             }
-          }
+          },
         });
-        let lastTableY = doc.lastAutoTable.finalY ? doc.lastAutoTable.finalY + 2 : afterNameY + 24;
+        let lastTableY = doc.lastAutoTable.finalY
+          ? doc.lastAutoTable.finalY + 2
+          : afterNameY + 24;
         y = lastTableY;
         // --- WEAPONS & EQUIPMENT TABLES SIDE BY SIDE ---
         const tableStartY = y;
@@ -720,11 +807,11 @@ export default function Home() {
             startY: tableStartY,
             head: [["Weapon", "Size", "Amount", "Use", "Range", "Damage"]],
             body: weaponsData,
-            theme: 'grid',
+            theme: "grid",
             headStyles: {
               fillColor: tableHeaderBg,
               textColor: tableHeaderText,
-              fontStyle: 'bold',
+              fontStyle: "bold",
               fontSize: 8,
             },
             styles: {
@@ -734,14 +821,16 @@ export default function Home() {
               lineColor: 220,
               lineWidth: 0.1,
             },
-            margin: { 
-              left: margin + cardPadding + 8, 
-              right: margin + cardPadding + 8 + tableWidth 
+            margin: {
+              left: margin + cardPadding + 8,
+              right: margin + cardPadding + 8 + tableWidth,
             },
             tableWidth: tableWidth,
-            pageBreak: 'avoid',
+            pageBreak: "avoid",
           });
-          lastWeaponTableY = doc.lastAutoTable.finalY ? doc.lastAutoTable.finalY + 2 : tableStartY + 20;
+          lastWeaponTableY = doc.lastAutoTable.finalY
+            ? doc.lastAutoTable.finalY + 2
+            : tableStartY + 20;
         }
 
         if (unit.equipment?.length > 0) {
@@ -755,11 +844,11 @@ export default function Home() {
             startY: tableStartY,
             head: [["Equipment", "Size", "Notes", "Cost"]],
             body: equipmentData,
-            theme: 'grid',
+            theme: "grid",
             headStyles: {
               fillColor: tableHeaderBg,
               textColor: tableHeaderText,
-              fontStyle: 'bold',
+              fontStyle: "bold",
               fontSize: 8,
             },
             styles: {
@@ -769,14 +858,16 @@ export default function Home() {
               lineColor: 220,
               lineWidth: 0.1,
             },
-            margin: { 
+            margin: {
               left: margin + cardPadding + 8 + tableWidth + 16, // 16px gap
-              right: margin + cardPadding + 8 
+              right: margin + cardPadding + 8,
             },
             tableWidth: tableWidth,
-            pageBreak: 'avoid',
+            pageBreak: "avoid",
           });
-          lastEquipmentTableY = doc.lastAutoTable.finalY ? doc.lastAutoTable.finalY + 2 : tableStartY + 20;
+          lastEquipmentTableY = doc.lastAutoTable.finalY
+            ? doc.lastAutoTable.finalY + 2
+            : tableStartY + 20;
         }
 
         // Set y to the max Y of both tables
@@ -789,31 +880,31 @@ export default function Home() {
     if (armyRules.trim()) {
       y += 16;
       doc.setFontSize(14);
-      doc.setFont('helvetica', 'bold');
+      doc.setFont("helvetica", "bold");
       doc.setTextColor(30, 30, 30);
-      doc.text('Special Rules', margin, y);
+      doc.text("Special Rules", margin, y);
       y += lineHeight;
-      doc.setFont('helvetica', 'normal');
+      doc.setFont("helvetica", "normal");
       doc.setFontSize(10);
       doc.setTextColor(60);
       // Bold rule names if formatted as "Name: Description"
       const rulesLines = armyRules.split(/\n|\r/).filter(Boolean);
-      rulesLines.forEach(line => {
+      rulesLines.forEach((line) => {
         const match = line.match(/^(\w[\w\s\-\(\)]+):\s*(.*)$/);
         if (match) {
-          doc.setFont('helvetica', 'bold');
-          doc.text(match[1] + ':', margin, y);
-          doc.setFont('helvetica', 'normal');
+          doc.setFont("helvetica", "bold");
+          doc.text(match[1] + ":", margin, y);
+          doc.setFont("helvetica", "normal");
           doc.text(match[2], margin + 60, y);
         } else {
-          doc.setFont('helvetica', 'normal');
+          doc.setFont("helvetica", "normal");
           doc.text(line, margin, y);
         }
         y += 14;
       });
     }
 
-    doc.save(`${armyName || 'army'}_list.pdf`);
+    doc.save(`${armyName || "army"}_list.pdf`);
   };
 
   const handleExportJSON = () => {
@@ -883,7 +974,7 @@ export default function Home() {
       </div>
     );
   };
-  
+
   const renderField = (field) => {
     switch (field.type) {
       case "text":
@@ -894,7 +985,11 @@ export default function Home() {
             <Input
               type={field.type}
               id={field.id}
-              value={field.id === "power" && unitForm.isMinifigure ? "1" : unitForm[field.id]}
+              value={
+                field.id === "power" && unitForm.isMinifigure
+                  ? "1"
+                  : unitForm[field.id]
+              }
               onChange={(e) =>
                 setUnitForm({ ...unitForm, [field.id]: e.target.value })
               }
@@ -926,11 +1021,13 @@ export default function Home() {
             <Switch
               checked={unitForm[field.id]}
               onCheckedChange={(checked) => {
-                setUnitForm({ 
-                  ...unitForm, 
+                setUnitForm({
+                  ...unitForm,
                   [field.id]: checked,
                   // When isMinifigure is toggled on, set power to 1
-                  ...(field.id === "isMinifigure" && checked ? { power: "1" } : {})
+                  ...(field.id === "isMinifigure" && checked
+                    ? { power: "1" }
+                    : {}),
                 });
               }}
             />
@@ -971,7 +1068,6 @@ export default function Home() {
         return null;
     }
   };
-  
 
   if (!mounted) {
     return null; // or a loading state
@@ -1014,7 +1110,11 @@ export default function Home() {
         <div className="flex flex-wrap gap-2 w-full md:w-auto">
           {squads.length > 0 && (
             <>
-              <Button onClick={handleExportJSON} variant="outline" className="flex-1 sm:flex-none">
+              <Button
+                onClick={handleExportJSON}
+                variant="outline"
+                className="flex-1 sm:flex-none"
+              >
                 <Download className="mr-2 h-4 w-4" />
                 Export Army
               </Button>
@@ -1048,6 +1148,19 @@ export default function Home() {
         {/* Left Column - Forms in Tabs */}
         <Card>
           <CardHeader>
+            {selectedUnit && (
+              <div className="flex justify-end">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleUnselectUnit}
+                  className="text-muted-foreground hover:text-foreground border-2"
+                >
+                  <i className="fas fa-times"></i>
+                </Button>
+              </div>
+            )}
             <CardTitle>Unit Management</CardTitle>
             <CardDescription>
               {selectedSquadData
@@ -1062,24 +1175,30 @@ export default function Home() {
               <Tabs defaultValue="unit" className="w-full">
                 <TabsList className="grid w-full grid-cols-4">
                   <TabsTrigger value="unit">Unit</TabsTrigger>
-                  <TabsTrigger 
-                    value="weapons" 
+                  <TabsTrigger
+                    value="weapons"
                     disabled={!selectedUnit}
-                    className={!selectedUnit ? "opacity-50 cursor-not-allowed" : ""}
+                    className={
+                      !selectedUnit ? "opacity-50 cursor-not-allowed" : ""
+                    }
                   >
                     Weapons
                   </TabsTrigger>
-                  <TabsTrigger 
-                    value="equipment" 
+                  <TabsTrigger
+                    value="equipment"
                     disabled={!selectedUnit}
-                    className={!selectedUnit ? "opacity-50 cursor-not-allowed" : ""}
+                    className={
+                      !selectedUnit ? "opacity-50 cursor-not-allowed" : ""
+                    }
                   >
                     Equipment
                   </TabsTrigger>
-                  <TabsTrigger 
-                    value="specialties" 
+                  <TabsTrigger
+                    value="specialties"
                     disabled={!selectedUnit}
-                    className={!selectedUnit ? "opacity-50 cursor-not-allowed" : ""}
+                    className={
+                      !selectedUnit ? "opacity-50 cursor-not-allowed" : ""
+                    }
                   >
                     Specialties
                   </TabsTrigger>
@@ -1124,7 +1243,7 @@ export default function Home() {
                           />
                           <Label>Show Bastard Weapons</Label>
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 gap-4">
                           <div className="space-y-2">
                             <Label htmlFor="weaponType">Type</Label>
                             <Select
@@ -1137,9 +1256,12 @@ export default function Home() {
                               </SelectTrigger>
                               <SelectContent>
                                 {weaponTypes
-                                  .filter(weapon => 
-                                    (showBastardWeapons && weapon.category === "Bastard") || 
-                                    (!showBastardWeapons && weapon.category !== "Bastard")
+                                  .filter(
+                                    (weapon) =>
+                                      (showBastardWeapons &&
+                                        weapon.category === "Bastard") ||
+                                      (!showBastardWeapons &&
+                                        weapon.category !== "Bastard")
                                   )
                                   .map((weapon) => (
                                     <SelectItem
@@ -1162,7 +1284,11 @@ export default function Home() {
                               onChange={(e) =>
                                 handleWeaponSizeChange(parseInt(e.target.value))
                               }
-                              disabled={weaponTypes.find(w => w.name === weaponForm.type)?.size !== undefined}
+                              disabled={
+                                weaponTypes.find(
+                                  (w) => w.name === weaponForm.type
+                                )?.size !== undefined
+                              }
                             />
                           </div>
                           <div className="space-y-2">
@@ -1192,33 +1318,6 @@ export default function Home() {
                                 })
                               }
                               placeholder="Custom name (optional)"
-                            />
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-3 gap-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="weaponUse">Use</Label>
-                            <Input
-                              id="weaponUse"
-                              type="number"
-                              value={weaponForm.use}
-                              disabled
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="weaponRange">Range</Label>
-                            <Input 
-                              id="weaponRange"
-                              value={weaponForm.range} 
-                              disabled 
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="weaponDamage">Damage</Label>
-                            <Input 
-                              id="weaponDamage"
-                              value={weaponForm.damage} 
-                              disabled 
                             />
                           </div>
                         </div>
@@ -1289,7 +1388,7 @@ export default function Home() {
                   {selectedUnit ? (
                     <>
                       <form onSubmit={handleAddEquipment} className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 gap-4">
                           <div className="space-y-2">
                             <Label htmlFor="equipmentType">Type</Label>
                             <Select
@@ -1326,8 +1425,14 @@ export default function Home() {
                                   size: parseInt(e.target.value),
                                 })
                               }
-                              disabled={equipment_types.find(e => e.name === equipmentForm.type)?.lightArmor || 
-                                      equipment_types.find(e => e.name === equipmentForm.type)?.heavyArmor}
+                              disabled={
+                                equipment_types.find(
+                                  (e) => e.name === equipmentForm.type
+                                )?.lightArmor ||
+                                equipment_types.find(
+                                  (e) => e.name === equipmentForm.type
+                                )?.heavyArmor
+                              }
                             />
                           </div>
                         </div>
@@ -1357,7 +1462,9 @@ export default function Home() {
                           <Table>
                             <TableHeader>
                               <TableRow>
-                                <TableHead className="text-right">Actions</TableHead>
+                                <TableHead className="text-right">
+                                  Actions
+                                </TableHead>
                                 <TableHead>Name</TableHead>
                                 <TableHead>Size</TableHead>
                                 <TableHead>Notes</TableHead>
@@ -1373,7 +1480,9 @@ export default function Home() {
                                       <Button
                                         variant="ghost"
                                         size="icon"
-                                        onClick={() => handleDeleteEquipment(equipment.id)}
+                                        onClick={() =>
+                                          handleDeleteEquipment(equipment.id)
+                                        }
                                       >
                                         <Trash2 className="h-4 w-4" />
                                       </Button>
@@ -1406,22 +1515,31 @@ export default function Home() {
                           <Select
                             id="specialtyType"
                             value={specialtyForm.type}
-                            onValueChange={(value) => setSpecialtyForm({ type: value })}
+                            onValueChange={(value) =>
+                              setSpecialtyForm({ type: value })
+                            }
                           >
                             <SelectTrigger>
                               <SelectValue placeholder="Select specialty" />
                             </SelectTrigger>
                             <SelectContent>
-                              {Object.entries(specialtyGroups).map(([group, specialties]) => (
-                                <SelectGroup key={group}>
-                                  <SelectLabel>{group}</SelectLabel>
-                                  {Object.entries(specialties).map(([type, specialty]) => (
-                                    <SelectItem key={`${group}:${type}`} value={`${group}:${type}`}>
-                                      {specialty.name}
-                                    </SelectItem>
-                                  ))}
-                                </SelectGroup>
-                              ))}
+                              {Object.entries(specialtyGroups).map(
+                                ([group, specialties]) => (
+                                  <SelectGroup key={group}>
+                                    <SelectLabel>{group}</SelectLabel>
+                                    {Object.entries(specialties).map(
+                                      ([type, specialty]) => (
+                                        <SelectItem
+                                          key={`${group}:${type}`}
+                                          value={`${group}:${type}`}
+                                        >
+                                          {specialty.name}
+                                        </SelectItem>
+                                      )
+                                    )}
+                                  </SelectGroup>
+                                )
+                              )}
                             </SelectContent>
                           </Select>
                         </div>
@@ -1436,7 +1554,9 @@ export default function Home() {
                           <Table>
                             <TableHeader>
                               <TableRow>
-                                <TableHead className="text-right">Actions</TableHead>
+                                <TableHead className="text-right">
+                                  Actions
+                                </TableHead>
                                 <TableHead>Name</TableHead>
                                 <TableHead>Description</TableHead>
                                 <TableHead>Cost</TableHead>
@@ -1451,13 +1571,17 @@ export default function Home() {
                                       <Button
                                         variant="ghost"
                                         size="icon"
-                                        onClick={() => handleDeleteSpecialty(specialty.id)}
+                                        onClick={() =>
+                                          handleDeleteSpecialty(specialty.id)
+                                        }
                                       >
                                         <Trash2 className="h-4 w-4" />
                                       </Button>
                                     </TableCell>
                                     <TableCell>{specialty.name}</TableCell>
-                                    <TableCell>{specialty.description}</TableCell>
+                                    <TableCell>
+                                      {specialty.description}
+                                    </TableCell>
                                     <TableCell>{specialty.cost}Ü</TableCell>
                                   </TableRow>
                                 ))}
@@ -1570,6 +1694,22 @@ export default function Home() {
             </CardContent>
           </Card>
 
+          {/* Add Squad Button */}
+          {selectedUnit && (
+            <div className="flex justify-center my-4">
+              <Button 
+                onClick={() => {
+                  setSelectedUnit(null);
+                  setUnitForm(initialUnitForm);
+                }}
+                className="w-full"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Add Unit
+              </Button>
+            </div>
+          )}
+
           {/* Units List for Selected Squad */}
           {selectedSquadData && (
             <Card>
@@ -1632,7 +1772,13 @@ export default function Home() {
                           </TableCell>
                         </TableRow>
                         {/* Add keywords row */}
-                        {squadFields.filter(f => f.type === 'switch' && f.id !== 'isMinifigure' && f.id !== 'hasDeflection' && unit[f.id]).length > 0 && (
+                        {squadFields.filter(
+                          (f) =>
+                            f.type === "switch" &&
+                            f.id !== "isMinifigure" &&
+                            f.id !== "hasDeflection" &&
+                            unit[f.id]
+                        ).length > 0 && (
                           <TableRow>
                             <TableCell
                               colSpan={
@@ -1645,9 +1791,15 @@ export default function Home() {
                             >
                               <div className="text-sm text-muted-foreground italic">
                                 {squadFields
-                                  .filter(f => f.type === 'switch' && f.id !== 'isMinifigure' && f.id !== 'hasDeflection' && unit[f.id])
-                                  .map(f => f.label)
-                                  .join(', ')}
+                                  .filter(
+                                    (f) =>
+                                      f.type === "switch" &&
+                                      f.id !== "isMinifigure" &&
+                                      f.id !== "hasDeflection" &&
+                                      unit[f.id]
+                                  )
+                                  .map((f) => f.label)
+                                  .join(", ")}
                               </div>
                             </TableCell>
                           </TableRow>
@@ -1693,7 +1845,8 @@ export default function Home() {
                                     {specialty.name}
                                     {specialty.cost !== 0 && (
                                       <span className="ml-1">
-                                        {specialty.cost > 0 ? '+' : ''}{specialty.cost}Ü
+                                        {specialty.cost > 0 ? "+" : ""}
+                                        {specialty.cost}Ü
                                       </span>
                                     )}
                                   </div>
