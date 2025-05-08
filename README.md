@@ -1,6 +1,6 @@
 # BrikWars Army Generator
 
-A modern web application for creating and managing army lists for the BrikWars tabletop game. Built with Next.js and featuring a sleek, user-friendly interface.
+A modern web application for creating and managing army lists for the BrikWars tabletop game. Built with Next.js and featuring a sleek, user-friendly interface. Serving as a sister project to the Statcard Generator (https://github.com/semillakan6/brikwars-statcard-gen) this App allows you to easily keep track of your units in battle, but if you want to learn how to stat your units I recommend starting with the card generator.
 
 You can check it out here! https://brikwarsarmygenerator.vercel.app/
 ---
@@ -58,7 +58,8 @@ You can check it out here! https://brikwarsarmygenerator.vercel.app/
 BrikWars is copyright ©1995-2025 Mike Rayhawk. For more information and the complete rules, please visit [BrikWars Official Site](https://www.brikwars.com).
 
 
-- Icons by Cybrandir, special thanks!
+- Armor, damage, mind, move range and power icons by Cybrandir, special thanks!
+- Value icon by Mike Rayhawk
 - The fonts in the `css/fonts/` folder are licensed under the [Open Font License](http://scripts.sil.org/cms/scripts/page.php?site_id=nrsi&id=OFL_web).
 
 
