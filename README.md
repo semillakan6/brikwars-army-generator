@@ -1,6 +1,7 @@
 # BrikWars Army Generator
 
 A modern web application for creating and managing army lists for the BrikWars tabletop game. Built with Next.js and featuring a sleek, user-friendly interface.
+
 You can check it out here! https://brikwarsarmygenerator.vercel.app/
 ---
 
