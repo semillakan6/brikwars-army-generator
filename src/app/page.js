@@ -111,7 +111,7 @@ const equipment_types = [
   {
     name: "Light Armor",
     notes:
-      "+2 to Armor against all incoming damage (but not for internal damage).",
+      "+2 to Armor against all incoming damage (but not for internal damage). Cannot Swim.",
     strength: 1,
     sizeCost: 1,
     baseCost: 1,
@@ -120,7 +120,7 @@ const equipment_types = [
   },
   {
     name: "Heavy Armor",
-    notes: "Has Deflection against the blow.",
+    notes: "Has Deflection against the blow. Cannot Swim, Half Speed.",
     strength: 1,
     sizeCost: 1,
     baseCost: 1,
