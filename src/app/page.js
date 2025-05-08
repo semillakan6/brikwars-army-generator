@@ -668,9 +668,7 @@ export default function Home() {
       doc.setFontSize(15);
       doc.setTextColor(30, 30, 30);
       doc.text(
-        `${squad.name} [${squad.units.length}] • ${calculateSquadPoints(
-          squad
-        )}Ü`,
+        `${squad.name} [${squad.units.reduce((total, unit) => total + (parseInt(unit.unit_number) || 1), 0)} (${squad.units.length})] • ${calculateSquadPoints(squad)}Ü`,
         margin + cardPadding,
         y
       );
@@ -1666,7 +1664,9 @@ export default function Home() {
                       <TableCell className="font-medium">
                         {squad.name}
                       </TableCell>
-                      <TableCell>{squad.units.length}</TableCell>
+                      <TableCell>
+                        {squad.units.reduce((total, unit) => total + (parseInt(unit.unit_number) || 1), 0)} ({squad.units.length})
+                      </TableCell>
                       <TableCell>{calculateSquadPoints(squad)}Ü</TableCell>
                       <TableCell className="text-right">
                         <Button
