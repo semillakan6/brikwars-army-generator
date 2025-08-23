@@ -2,6 +2,7 @@ import { Geist, Geist_Mono, Bevan } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
+import { SpeedInsights } from "@vercel/speed-insights/next"
 import Head from "next/head";
 import "./globals.css";
 
