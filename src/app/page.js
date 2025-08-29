@@ -213,6 +213,14 @@ export default function Home() {
     setMounted(true);
   }, []);
 
+  // Reset unit selection when squad changes
+  React.useEffect(() => {
+    if (selectedSquad) {
+      setSelectedUnit(null);
+      setUnitForm(initialUnitForm);
+    }
+  }, [selectedSquad]);
+
   const handleAddSquad = () => {
     if (newSquadName.trim()) {
       const newSquad = {
@@ -932,7 +940,44 @@ export default function Home() {
           const data = JSON.parse(e.target.result);
           setArmyName(data.name || "");
           setArmyRules(data.rules || "");
-          setSquads(data.squads || []);
+          // Rebuild ALL IDs to ensure uniqueness and avoid key collisions
+          // Start fresh so imported data doesn't clash with existing counters
+          nextId = 1;
+
+          const remapSpecialty = (specialty) => ({
+            ...specialty,
+            id: generateId(),
+          });
+
+          const remapEquipment = (equipment) => ({
+            ...equipment,
+            id: generateId(),
+          });
+
+          const remapWeapon = (weapon) => ({
+            ...weapon,
+            id: generateId(),
+          });
+
+          const remapUnit = (unit) => ({
+            ...unit,
+            id: generateId(),
+            weapons: (unit.weapons || []).map(remapWeapon),
+            equipment: (unit.equipment || []).map(remapEquipment),
+            specialties: (unit.specialties || []).map(remapSpecialty),
+          });
+
+          const remapSquad = (squad) => ({
+            ...squad,
+            id: generateId(),
+            units: (squad.units || []).map(remapUnit),
+          });
+
+          const newSquads = (data.squads || []).map(remapSquad);
+
+          setSquads(newSquads);
+          setSelectedSquad(null);
+          setSelectedUnit(null);
         } catch (error) {
           alert(
             "Error importing file. Please make sure it is a valid army file."
@@ -1659,6 +1704,24 @@ export default function Home() {
                         setSelectedSquad(squad.id);
                         setSelectedUnit(null);
                         setUnitForm(initialUnitForm);
+                        setWeaponForm({
+                          type: "",
+                          size: 1,
+                          amount: 1,
+                          name: "",
+                          use: 0,
+                          range: 0,
+                          damage: "",
+                        });
+                        setEquipmentForm({
+                          type: "",
+                          size: 1,
+                          notes: "",
+                        });
+                        setSpecialtyForm({
+                          type: "",
+                          group: "",
+                        });
                       }}
                     >
                       <TableCell className="font-medium">
