@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Moon, Sun, Users, Map, Book, Settings, HelpCircle, Menu } from "lucide-react";
+import { Moon, Sun, Menu, Home, LayoutGrid, Shuffle } from "lucide-react";
 import { useTheme } from "next-themes";
 import { usePathname } from "next/navigation";
 
@@ -22,9 +22,6 @@ import {
   NavigationMenuTrigger,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
-
-import "@fortawesome/fontawesome-free/js/all.js";
-
 const ListItem = React.forwardRef(({ className, title, children, href, ...props }, ref) => {
   return (
     <li>
@@ -36,9 +33,9 @@ const ListItem = React.forwardRef(({ className, title, children, href, ...props 
           {...props}
         >
           <div className="text-sm font-medium leading-none">{title}</div>
-          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+          <div className="line-clamp-2 text-sm leading-snug text-muted-foreground">
             {children}
-          </p>
+          </div>
         </Link>
       </NavigationMenuLink>
     </li>
@@ -92,7 +89,7 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-14 items-center px-4">
+      <div className="app-container flex h-14 items-center px-4">
         {/* Mobile menu button */}
         <Button
           variant="ghost"
@@ -106,7 +103,7 @@ export function Header() {
         {/* Logo - visible on all screens */}
         <Link href="/" className="flex items-center space-x-2 mr-6">
           <span className="font-bold text-sm sm:text-base">
-            <i className="fas fa-home mr-2"></i> BrikWars Army Generator
+            <Home className="inline h-4 w-4 mr-2" /> BrikWars Army Generator
           </span>
         </Link>
         
@@ -125,13 +122,13 @@ export function Header() {
                   <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
                     <ListItem href="/objective-generator" title="Objective Card Generator">
                       <div className="flex items-center gap-2">
-                        <i className="fas fa-cards-blank h-4 w-4" />
+                        <LayoutGrid className="h-4 w-4" />
                         Generate custom objective cards for missions
                       </div>
                     </ListItem>
                     <ListItem href="/objective-dealer" title="Objective Card Dealer">
                       <div className="flex items-center gap-2">
-                        <i className="fas fa-random h-4 w-4" />
+                        <Shuffle className="h-4 w-4" />
                         Deal random objective cards to players
                       </div>
                     </ListItem>
@@ -165,7 +162,7 @@ export function Header() {
             ? 'opacity-100 transform translate-y-0' 
             : 'opacity-0 transform -translate-y-4 pointer-events-none'
         }`}>
-            <div className="container py-4 space-y-2">
+            <div className="app-container py-4 space-y-2">
               <Link 
                 href="/" 
                 className="block px-4 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground rounded-md"
@@ -180,7 +177,7 @@ export function Header() {
                   className="block px-4 py-2 text-sm hover:bg-accent hover:text-accent-foreground rounded-md"
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  <i className="fas fa-cards-blank mr-2"></i>
+                  <LayoutGrid className="inline h-4 w-4 mr-2" />
                   Objective Card Generator
                 </Link>
                 <Link 
@@ -188,7 +185,7 @@ export function Header() {
                   className="block px-4 py-2 text-sm hover:bg-accent hover:text-accent-foreground rounded-md"
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  <i className="fas fa-random mr-2"></i>
+                  <Shuffle className="inline h-4 w-4 mr-2" />
                   Objective Card Dealer
                 </Link>
               </div>

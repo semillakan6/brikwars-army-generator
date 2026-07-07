@@ -1,5 +1,10 @@
 export const squadFields = [
   {
+    id: "unitIcon",
+    label: "Unit Icon",
+    type: "icon",
+  },
+  {
     id: "name",
     label: "Unit Name",
     type: "text",
@@ -17,14 +22,13 @@ export const squadFields = [
     id: "size",
     label: "Size",
     type: "number",
+    min: 1,
     icon: "/icons/size.svg"
   },
   {
     id: "armor",
     label: "Armor",
     type: "text",
-    min: 0,
-    max: 10,
     icon: "/icons/armour.svg"
   },
   {
@@ -32,7 +36,6 @@ export const squadFields = [
     label: "Power",
     type: "number",
     min: 1,
-    max: 10,
     icon: "/icons/power.svg"
   },
   {
@@ -69,7 +72,6 @@ export const squadFields = [
     label: "Value",
     type: "number",
     min: 1,
-    max: 100,
     icon: "/icons/value.svg"
   },
   {

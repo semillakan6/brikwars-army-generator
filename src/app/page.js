@@ -36,9 +36,16 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Separator } from "@/components/ui/separator";
-import { Plus, Trash2, Download, Upload } from "lucide-react";
+import { Plus, Trash2, Download, Upload, X, Copy } from "lucide-react";
 import { useState, useEffect } from "react";
 import { squadFields } from "@/config/squad-fields";
+import {
+  DEFAULT_UNIT_ICON,
+  getUnitIconSrc,
+  preloadUnitIconBase64,
+  unitIconImageClassName,
+  unitIcons,
+} from "@/config/unit-icons";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { weaponTypes } from "@/config/weapons";
@@ -167,6 +174,60 @@ const generateId = () => {
   return nextId++;
 };
 
+const remapSpecialty = (specialty) => ({
+  ...specialty,
+  id: generateId(),
+});
+
+const remapEquipment = (equipment) => ({
+  ...equipment,
+  id: generateId(),
+});
+
+const remapWeapon = (weapon) => ({
+  ...weapon,
+  id: generateId(),
+});
+
+const remapUnit = (unit, options = {}) => ({
+  ...unit,
+  id: generateId(),
+  name: options.name ?? unit.name,
+  unitIcon: unit.unitIcon || DEFAULT_UNIT_ICON,
+  weapons: (unit.weapons || []).map(remapWeapon),
+  equipment: (unit.equipment || []).map(remapEquipment),
+  specialties: (unit.specialties || []).map(remapSpecialty),
+});
+
+const remapSquad = (squad, options = {}) => ({
+  ...squad,
+  id: generateId(),
+  name: options.name ?? squad.name,
+  units: (squad.units || []).map((unit) => remapUnit(unit)),
+});
+
+const isUnitTableField = (field) =>
+  field.type !== "switch" &&
+  field.type !== "icon" &&
+  field.id !== "equipment";
+
+const isUnitStatField = (field) =>
+  field.type !== "switch" &&
+  field.type !== "icon" &&
+  field.id !== "equipment";
+
+const tableHeadActions = "px-3 text-right";
+const tableHeadName = "px-3 text-left";
+const tableHeadCenter = "px-3 text-center";
+const tableCellActions = "px-3 text-right";
+const tableCellName = "px-3 text-left";
+const tableCellCenter = "px-3 text-center";
+
+const unitTableHeadClass = (fieldId) =>
+  fieldId === "name" ? tableHeadName : tableHeadCenter;
+const unitTableCellClass = (fieldId) =>
+  fieldId === "name" ? tableCellName : tableCellCenter;
+
 export default function Home() {
   const [mounted, setMounted] = React.useState(false);
   const [armyName, setArmyName] = useState("");
@@ -197,7 +258,13 @@ export default function Home() {
 
   // Initialize unit form with default values from squadFields
   const initialUnitForm = squadFields.reduce((acc, field) => {
-    acc[field.id] = field.type === "switch" ? false : "";
+    if (field.type === "switch") {
+      acc[field.id] = false;
+    } else if (field.type === "icon") {
+      acc[field.id] = DEFAULT_UNIT_ICON;
+    } else {
+      acc[field.id] = "";
+    }
     return acc;
   }, {});
 
@@ -243,6 +310,23 @@ export default function Home() {
     }
   };
 
+  const handleDuplicateSquad = (squadId) => {
+    const squadIndex = squads.findIndex((squad) => squad.id === squadId);
+    if (squadIndex === -1) return;
+
+    const squad = squads[squadIndex];
+    const duplicatedSquad = remapSquad(squad, {
+      name: `${squad.name} (Copy)`,
+    });
+    const updatedSquads = [...squads];
+    updatedSquads.splice(squadIndex + 1, 0, duplicatedSquad);
+
+    setSquads(updatedSquads);
+    setSelectedSquad(duplicatedSquad.id);
+    setSelectedUnit(null);
+    setUnitForm(initialUnitForm);
+  };
+
   const handleAddUnit = (e) => {
     e.preventDefault();
     if (!selectedSquad) return;
@@ -250,7 +334,8 @@ export default function Home() {
     const newUnit = {
       ...unitForm,
       id: generateId(),
-      weapons: [], // Initialize empty weapons array
+      unitIcon: unitForm.unitIcon || DEFAULT_UNIT_ICON,
+      weapons: [],
     };
 
     const updatedSquads = squads.map((squad) => {
@@ -311,12 +396,42 @@ export default function Home() {
     }
   };
 
+  const handleDuplicateUnit = (squadId, unitId) => {
+    let duplicatedUnit = null;
+
+    const updatedSquads = squads.map((squad) => {
+      if (squad.id !== squadId) return squad;
+
+      const unitIndex = squad.units.findIndex((unit) => unit.id === unitId);
+      if (unitIndex === -1) return squad;
+
+      const unit = squad.units[unitIndex];
+      duplicatedUnit = remapUnit(unit, {
+        name: `${unit.name || "Unit"} (Copy)`,
+      });
+      const units = [...squad.units];
+      units.splice(unitIndex + 1, 0, duplicatedUnit);
+
+      return { ...squad, units };
+    });
+
+    if (!duplicatedUnit) return;
+
+    setSquads(updatedSquads);
+    setSelectedUnit(duplicatedUnit.id);
+    setUnitForm({
+      ...initialUnitForm,
+      ...duplicatedUnit,
+      unitIcon: duplicatedUnit.unitIcon || DEFAULT_UNIT_ICON,
+    });
+  };
+
   const handleUnitClick = (unit) => {
     setSelectedUnit(unit.id);
-    // Ensure all fields have defined values by merging with initialUnitForm
     setUnitForm({
       ...initialUnitForm,
       ...unit,
+      unitIcon: unit.unitIcon || DEFAULT_UNIT_ICON,
     });
   };
 
@@ -614,7 +729,8 @@ export default function Home() {
     });
   };
 
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
+    const iconCache = await preloadUnitIconBase64();
     const doc = new jsPDF({ unit: "pt", format: "a4" });
     const pageWidth = doc.internal.pageSize.getWidth();
     const margin = 32;
@@ -626,6 +742,24 @@ export default function Home() {
     const tableHeaderText = 40;
     const cardBg = [252, 252, 252];
     const cardBorder = [200, 200, 200];
+
+    const drawUnitHeader = (pdfDoc, unit, x, y) => {
+      const iconId = unit.unitIcon || DEFAULT_UNIT_ICON;
+      const iconData =
+        iconCache.get(iconId) || iconCache.get(DEFAULT_UNIT_ICON);
+      if (iconData) {
+        pdfDoc.addImage(iconData, "PNG", x, y - 10, 12, 12);
+      }
+
+      const unitName = `${unit.name || "Unit"}${
+        unit.unit_number ? ` [${unit.unit_number}]` : ""
+      }`;
+      pdfDoc.setFont("helvetica", "bold");
+      pdfDoc.setFontSize(12);
+      pdfDoc.setTextColor(50, 50, 50);
+      pdfDoc.text(unitName, x + 16, y);
+      return unitName;
+    };
 
     // --- HEADER ---
     doc.setFont("helvetica", "bold");
@@ -703,17 +837,10 @@ export default function Home() {
         }
 
         // Store the unit name and y position
-        const unitName = `${unit.name || "Unit"}${
-          unit.unit_number ? ` [${unit.unit_number}]` : ""
-        }`;
         const unitNameX = margin + cardPadding + 8;
         let unitNameY = y;
 
-        // Draw unit name and keywords/specialties as before
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(12);
-        doc.setTextColor(50, 50, 50);
-        doc.text(unitName, unitNameX, unitNameY);
+        drawUnitHeader(doc, unit, unitNameX, unitNameY);
         unitNameY += lineHeight - 2;
         // Keywords (from switches)
         if (keywords) {
@@ -741,9 +868,7 @@ export default function Home() {
         }
         let afterNameY = unitNameY;
         // --- UNIT STATS TABLE ---
-        const statFields = squadFields.filter(
-          (f) => f.type !== "switch" && f.id !== "equipment"
-        );
+        const statFields = squadFields.filter(isUnitStatField);
         const statLabels = statFields.map((f) => f.label);
         const statValues = statFields.map((f) => {
           if (f.type === "select") {
@@ -779,13 +904,8 @@ export default function Home() {
             right: margin + cardPadding + 8,
           },
           didDrawPage: (data) => {
-            // Only draw if this is not the first page, or if the table is at the top of the page
             if (data.pageNumber > 1 || data.settings.startY < afterNameY) {
-              doc.setFont("helvetica", "bold");
-              doc.setFontSize(12);
-              doc.setTextColor(50, 50, 50);
-              doc.text(unitName, unitNameX, data.settings.margin.top);
-              // Optionally, re-draw keywords/specialties here as well
+              drawUnitHeader(doc, unit, unitNameX, data.settings.margin.top);
             }
           },
         });
@@ -944,35 +1064,6 @@ export default function Home() {
           // Start fresh so imported data doesn't clash with existing counters
           nextId = 1;
 
-          const remapSpecialty = (specialty) => ({
-            ...specialty,
-            id: generateId(),
-          });
-
-          const remapEquipment = (equipment) => ({
-            ...equipment,
-            id: generateId(),
-          });
-
-          const remapWeapon = (weapon) => ({
-            ...weapon,
-            id: generateId(),
-          });
-
-          const remapUnit = (unit) => ({
-            ...unit,
-            id: generateId(),
-            weapons: (unit.weapons || []).map(remapWeapon),
-            equipment: (unit.equipment || []).map(remapEquipment),
-            specialties: (unit.specialties || []).map(remapSpecialty),
-          });
-
-          const remapSquad = (squad) => ({
-            ...squad,
-            id: generateId(),
-            units: (squad.units || []).map(remapUnit),
-          });
-
           const newSquads = (data.squads || []).map(remapSquad);
 
           setSquads(newSquads);
@@ -1022,6 +1113,60 @@ export default function Home() {
     switch (field.type) {
       case "text":
       case "number":
+        if (field.id === "name") {
+          return (
+            <div className="flex flex-col gap-1">
+              <Label htmlFor={field.id}>{renderLabel(field)}</Label>
+              <div className="flex gap-2">
+                <Select
+                  value={unitForm.unitIcon || DEFAULT_UNIT_ICON}
+                  onValueChange={(value) =>
+                    setUnitForm({ ...unitForm, unitIcon: value })
+                  }
+                >
+                  <SelectTrigger
+                    className="w-[4.5rem] shrink-0"
+                    aria-label="Unit icon"
+                  >
+                    <SelectValue>
+                      <img
+                        src={getUnitIconSrc(unitForm.unitIcon)}
+                        alt=""
+                        className={`h-6 w-6 ${unitIconImageClassName}`}
+                      />
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {unitIcons.map((icon) => (
+                      <SelectItem key={icon.id} value={icon.id}>
+                        <span className="flex items-center gap-2">
+                          <img
+                            src={getUnitIconSrc(icon.id)}
+                            alt=""
+                            className={`h-6 w-6 ${unitIconImageClassName}`}
+                          />
+                          <span>{icon.label}</span>
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Input
+                  type="text"
+                  id={field.id}
+                  className="flex-1"
+                  value={unitForm[field.id]}
+                  onChange={(e) =>
+                    setUnitForm({ ...unitForm, [field.id]: e.target.value })
+                  }
+                  placeholder={field.placeholder}
+                  required={field.required}
+                />
+              </div>
+            </div>
+          );
+        }
+
         return (
           <div className="flex flex-col gap-1">
             <Label htmlFor={field.id}>{renderLabel(field)}</Label>
@@ -1039,6 +1184,7 @@ export default function Home() {
               placeholder={field.placeholder}
               required={field.required}
               disabled={field.id === "power" && unitForm.isMinifigure}
+              min={field.type === "number" ? field.min : undefined}
             />
           </div>
         );
@@ -1117,7 +1263,7 @@ export default function Home() {
   }
 
   return (
-    <main className="container mx-auto p-4">
+    <main className="app-container py-4">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
         <div className="space-y-2 w-full md:w-auto">
           <div className="flex items-center justify-between gap-4">
@@ -1187,7 +1333,7 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-[1.65rem]">
         {/* Left Column - Forms in Tabs */}
         <Card>
           <CardHeader>
@@ -1200,7 +1346,7 @@ export default function Home() {
                   onClick={handleUnselectUnit}
                   className="text-muted-foreground hover:text-foreground border-2"
                 >
-                  <i className="fas fa-times"></i>
+                  <X className="h-4 w-4" />
                 </Button>
               </div>
             )}
@@ -1252,7 +1398,10 @@ export default function Home() {
                     className="space-y-4"
                   >
                     {squadFields
-                      .filter((field) => field.id !== "equipment")
+                      .filter(
+                        (field) =>
+                          field.id !== "equipment" && field.type !== "icon"
+                      )
                       .map((field) => (
                         <div key={field.id} className="space-y-2">
                           {renderField(field)}
@@ -1375,16 +1524,16 @@ export default function Home() {
                           <Table>
                             <TableHeader>
                               <TableRow>
-                                <TableHead className="text-right">
+                                <TableHead className={tableHeadActions}>
                                   Actions
                                 </TableHead>
-                                <TableHead>Name</TableHead>
-                                <TableHead>Type</TableHead>
-                                <TableHead>Size</TableHead>
-                                <TableHead>Amount</TableHead>
-                                <TableHead>Use</TableHead>
-                                <TableHead>Range</TableHead>
-                                <TableHead>Damage</TableHead>
+                                <TableHead className={tableHeadName}>Name</TableHead>
+                                <TableHead className={tableHeadCenter}>Type</TableHead>
+                                <TableHead className={tableHeadCenter}>Size</TableHead>
+                                <TableHead className={tableHeadCenter}>Amount</TableHead>
+                                <TableHead className={tableHeadCenter}>Use</TableHead>
+                                <TableHead className={tableHeadCenter}>Range</TableHead>
+                                <TableHead className={tableHeadCenter}>Damage</TableHead>
                               </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -1392,7 +1541,7 @@ export default function Home() {
                                 .find((u) => u.id === selectedUnit)
                                 ?.weapons?.map((weapon) => (
                                   <TableRow key={weapon.id}>
-                                    <TableCell className="text-left">
+                                    <TableCell className={tableCellActions}>
                                       <Button
                                         variant="ghost"
                                         size="icon"
@@ -1403,15 +1552,15 @@ export default function Home() {
                                         <Trash2 className="h-4 w-4" />
                                       </Button>
                                     </TableCell>
-                                    <TableCell>
+                                    <TableCell className={tableCellName}>
                                       {weapon.name || weapon.type}
                                     </TableCell>
-                                    <TableCell>{weapon.type}</TableCell>
-                                    <TableCell>{weapon.size}</TableCell>
-                                    <TableCell>{weapon.amount}</TableCell>
-                                    <TableCell>{weapon.use}</TableCell>
-                                    <TableCell>{weapon.range}</TableCell>
-                                    <TableCell>{weapon.damage}</TableCell>
+                                    <TableCell className={tableCellCenter}>{weapon.type}</TableCell>
+                                    <TableCell className={tableCellCenter}>{weapon.size}</TableCell>
+                                    <TableCell className={tableCellCenter}>{weapon.amount}</TableCell>
+                                    <TableCell className={tableCellCenter}>{weapon.use}</TableCell>
+                                    <TableCell className={tableCellCenter}>{weapon.range}</TableCell>
+                                    <TableCell className={tableCellCenter}>{weapon.damage}</TableCell>
                                   </TableRow>
                                 ))}
                             </TableBody>
@@ -1505,13 +1654,13 @@ export default function Home() {
                           <Table>
                             <TableHeader>
                               <TableRow>
-                                <TableHead className="text-right">
+                                <TableHead className={tableHeadActions}>
                                   Actions
                                 </TableHead>
-                                <TableHead>Name</TableHead>
-                                <TableHead>Size</TableHead>
-                                <TableHead>Notes</TableHead>
-                                <TableHead>Cost</TableHead>
+                                <TableHead className={tableHeadName}>Name</TableHead>
+                                <TableHead className={tableHeadCenter}>Size</TableHead>
+                                <TableHead className={tableHeadCenter}>Notes</TableHead>
+                                <TableHead className={tableHeadCenter}>Cost</TableHead>
                               </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -1519,7 +1668,7 @@ export default function Home() {
                                 .find((u) => u.id === selectedUnit)
                                 ?.equipment?.map((equipment) => (
                                   <TableRow key={equipment.id}>
-                                    <TableCell className="text-left">
+                                    <TableCell className={tableCellActions}>
                                       <Button
                                         variant="ghost"
                                         size="icon"
@@ -1530,10 +1679,10 @@ export default function Home() {
                                         <Trash2 className="h-4 w-4" />
                                       </Button>
                                     </TableCell>
-                                    <TableCell>{equipment.type}</TableCell>
-                                    <TableCell>{equipment.size}</TableCell>
-                                    <TableCell>{equipment.notes}</TableCell>
-                                    <TableCell>{equipment.cost}Ü</TableCell>
+                                    <TableCell className={tableCellName}>{equipment.type}</TableCell>
+                                    <TableCell className={tableCellCenter}>{equipment.size}</TableCell>
+                                    <TableCell className={tableCellCenter}>{equipment.notes}</TableCell>
+                                    <TableCell className={tableCellCenter}>{equipment.cost}Ü</TableCell>
                                   </TableRow>
                                 ))}
                             </TableBody>
@@ -1597,12 +1746,12 @@ export default function Home() {
                           <Table>
                             <TableHeader>
                               <TableRow>
-                                <TableHead className="text-right">
+                                <TableHead className={tableHeadActions}>
                                   Actions
                                 </TableHead>
-                                <TableHead>Name</TableHead>
-                                <TableHead>Description</TableHead>
-                                <TableHead>Cost</TableHead>
+                                <TableHead className={tableHeadName}>Name</TableHead>
+                                <TableHead className={tableHeadCenter}>Description</TableHead>
+                                <TableHead className={tableHeadCenter}>Cost</TableHead>
                               </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -1610,7 +1759,7 @@ export default function Home() {
                                 .find((u) => u.id === selectedUnit)
                                 ?.specialties?.map((specialty) => (
                                   <TableRow key={specialty.id}>
-                                    <TableCell className="text-left">
+                                    <TableCell className={tableCellActions}>
                                       <Button
                                         variant="ghost"
                                         size="icon"
@@ -1621,11 +1770,11 @@ export default function Home() {
                                         <Trash2 className="h-4 w-4" />
                                       </Button>
                                     </TableCell>
-                                    <TableCell>{specialty.name}</TableCell>
-                                    <TableCell>
+                                    <TableCell className={tableCellName}>{specialty.name}</TableCell>
+                                    <TableCell className={tableCellCenter}>
                                       {specialty.description}
                                     </TableCell>
-                                    <TableCell>{specialty.cost}Ü</TableCell>
+                                    <TableCell className={tableCellCenter}>{specialty.cost}Ü</TableCell>
                                   </TableRow>
                                 ))}
                             </TableBody>
@@ -1689,10 +1838,10 @@ export default function Home() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Squad Name</TableHead>
-                    <TableHead>Units</TableHead>
-                    <TableHead>Points</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead className={tableHeadName}>Squad Name</TableHead>
+                    <TableHead className={tableHeadCenter}>Units</TableHead>
+                    <TableHead className={tableHeadCenter}>Points</TableHead>
+                    <TableHead className={tableHeadActions}>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -1724,14 +1873,24 @@ export default function Home() {
                         });
                       }}
                     >
-                      <TableCell className="font-medium">
+                      <TableCell className={tableCellName}>
                         {squad.name}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className={tableCellCenter}>
                         {squad.units.reduce((total, unit) => total + (parseInt(unit.unit_number) || 1), 0)} ({squad.units.length})
                       </TableCell>
-                      <TableCell>{calculateSquadPoints(squad)}Ü</TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className={tableCellCenter}>{calculateSquadPoints(squad)}Ü</TableCell>
+                      <TableCell className={tableCellActions}>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDuplicateSquad(squad.id);
+                          }}
+                        >
+                          <Copy className="h-4 w-4" />
+                        </Button>
                         <Button
                           variant="ghost"
                           size="icon"
@@ -1786,15 +1945,15 @@ export default function Home() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      {squadFields
-                        .filter(
-                          (field) =>
-                            field.type !== "switch" && field.id !== "equipment"
-                        )
-                        .map((field) => (
-                          <TableHead key={field.id}>{field.label}</TableHead>
+                      {squadFields.filter(isUnitTableField).map((field) => (
+                          <TableHead
+                            key={field.id}
+                            className={unitTableHeadClass(field.id)}
+                          >
+                            {field.label}
+                          </TableHead>
                         ))}
-                      <TableHead className="text-right">Actions</TableHead>
+                      <TableHead className={tableHeadActions}>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -1804,24 +1963,44 @@ export default function Home() {
                           className={selectedUnit === unit.id ? "bg-muted" : ""}
                           onClick={() => handleUnitClick(unit)}
                         >
-                          {squadFields
-                            .filter(
-                              (field) =>
-                                field.type !== "switch" &&
-                                field.id !== "equipment"
-                            )
-                            .map((field) => (
-                              <TableCell key={field.id}>
-                                {field.type === "select"
-                                  ? field.options
-                                      .flatMap((group) => group.items)
-                                      .find(
-                                        (item) => item.value === unit[field.id]
-                                      )?.label || unit[field.id]
-                                  : unit[field.id]}
+                          {squadFields.filter(isUnitTableField).map((field) => (
+                              <TableCell
+                                key={field.id}
+                                className={unitTableCellClass(field.id)}
+                              >
+                                {field.id === "name" ? (
+                                  <div className="flex items-center gap-2">
+                                    <img
+                                      src={getUnitIconSrc(unit.unitIcon)}
+                                      alt=""
+                                      className={`h-6 w-6 ${unitIconImageClassName}`}
+                                    />
+                                    <span>{unit[field.id]}</span>
+                                  </div>
+                                ) : field.type === "select" ? (
+                                  field.options
+                                    .flatMap((group) => group.items)
+                                    .find((item) => item.value === unit[field.id])
+                                    ?.label || unit[field.id]
+                                ) : (
+                                  unit[field.id]
+                                )}
                               </TableCell>
                             ))}
-                          <TableCell className="text-right">
+                          <TableCell className={tableCellActions}>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDuplicateUnit(
+                                  selectedSquadData.id,
+                                  unit.id
+                                );
+                              }}
+                            >
+                              <Copy className="h-4 w-4" />
+                            </Button>
                             <Button
                               variant="ghost"
                               size="icon"
@@ -1844,13 +2023,7 @@ export default function Home() {
                         ).length > 0 && (
                           <TableRow>
                             <TableCell
-                              colSpan={
-                                squadFields.filter(
-                                  (field) =>
-                                    field.type !== "switch" &&
-                                    field.id !== "equipment"
-                                ).length + 1
-                              }
+                              colSpan={squadFields.filter(isUnitTableField).length + 1}
                             >
                               <div className="text-sm text-muted-foreground italic">
                                 {squadFields
@@ -1871,13 +2044,7 @@ export default function Home() {
                         {unit.hasDeflection && (
                           <TableRow>
                             <TableCell
-                              colSpan={
-                                squadFields.filter(
-                                  (field) =>
-                                    field.type !== "switch" &&
-                                    field.id !== "equipment"
-                                ).length + 1
-                              }
+                              colSpan={squadFields.filter(isUnitTableField).length + 1}
                             >
                               <div className="flex flex-wrap gap-2">
                                 <div className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary text-primary-foreground hover:bg-primary/80">
@@ -1891,13 +2058,7 @@ export default function Home() {
                         {unit.specialties?.length > 0 && (
                           <TableRow>
                             <TableCell
-                              colSpan={
-                                squadFields.filter(
-                                  (field) =>
-                                    field.type !== "switch" &&
-                                    field.id !== "equipment"
-                                ).length + 1
-                              }
+                              colSpan={squadFields.filter(isUnitTableField).length + 1}
                             >
                               <div className="flex flex-wrap gap-2">
                                 {unit.specialties.map((specialty) => (
@@ -1921,37 +2082,31 @@ export default function Home() {
                         {unit.weapons?.length > 0 && (
                           <TableRow>
                             <TableCell
-                              colSpan={
-                                squadFields.filter(
-                                  (field) =>
-                                    field.type !== "switch" &&
-                                    field.id !== "equipment"
-                                ).length + 1
-                              }
+                              colSpan={squadFields.filter(isUnitTableField).length + 1}
                             >
                               <div className="pl-4">
                                 <Table>
                                   <TableHeader>
                                     <TableRow>
-                                      <TableHead>Weapon</TableHead>
-                                      <TableHead>Size</TableHead>
-                                      <TableHead>Amount</TableHead>
-                                      <TableHead>Use</TableHead>
-                                      <TableHead>Range</TableHead>
-                                      <TableHead>Damage</TableHead>
+                                      <TableHead className={tableHeadName}>Weapon</TableHead>
+                                      <TableHead className={tableHeadCenter}>Size</TableHead>
+                                      <TableHead className={tableHeadCenter}>Amount</TableHead>
+                                      <TableHead className={tableHeadCenter}>Use</TableHead>
+                                      <TableHead className={tableHeadCenter}>Range</TableHead>
+                                      <TableHead className={tableHeadCenter}>Damage</TableHead>
                                     </TableRow>
                                   </TableHeader>
                                   <TableBody>
                                     {unit.weapons.map((weapon) => (
                                       <TableRow key={weapon.id}>
-                                        <TableCell>
+                                        <TableCell className={tableCellName}>
                                           {weapon.name || weapon.type}
                                         </TableCell>
-                                        <TableCell>{weapon.size}</TableCell>
-                                        <TableCell>{weapon.amount}</TableCell>
-                                        <TableCell>{weapon.use}</TableCell>
-                                        <TableCell>{weapon.range}</TableCell>
-                                        <TableCell>{weapon.damage}</TableCell>
+                                        <TableCell className={tableCellCenter}>{weapon.size}</TableCell>
+                                        <TableCell className={tableCellCenter}>{weapon.amount}</TableCell>
+                                        <TableCell className={tableCellCenter}>{weapon.use}</TableCell>
+                                        <TableCell className={tableCellCenter}>{weapon.range}</TableCell>
+                                        <TableCell className={tableCellCenter}>{weapon.damage}</TableCell>
                                       </TableRow>
                                     ))}
                                   </TableBody>
@@ -1963,31 +2118,25 @@ export default function Home() {
                         {unit.equipment?.length > 0 && (
                           <TableRow>
                             <TableCell
-                              colSpan={
-                                squadFields.filter(
-                                  (field) =>
-                                    field.type !== "switch" &&
-                                    field.id !== "equipment"
-                                ).length + 1
-                              }
+                              colSpan={squadFields.filter(isUnitTableField).length + 1}
                             >
                               <div className="pl-4">
                                 <Table>
                                   <TableHeader>
                                     <TableRow>
-                                      <TableHead>Equipment</TableHead>
-                                      <TableHead>Size</TableHead>
-                                      <TableHead>Notes</TableHead>
-                                      <TableHead>Cost</TableHead>
+                                      <TableHead className={tableHeadName}>Equipment</TableHead>
+                                      <TableHead className={tableHeadCenter}>Size</TableHead>
+                                      <TableHead className={tableHeadCenter}>Notes</TableHead>
+                                      <TableHead className={tableHeadCenter}>Cost</TableHead>
                                     </TableRow>
                                   </TableHeader>
                                   <TableBody>
                                     {unit.equipment.map((equipment) => (
                                       <TableRow key={equipment.id}>
-                                        <TableCell>{equipment.type}</TableCell>
-                                        <TableCell>{equipment.size}</TableCell>
-                                        <TableCell>{equipment.notes}</TableCell>
-                                        <TableCell>{equipment.cost}Ü</TableCell>
+                                        <TableCell className={tableCellName}>{equipment.type}</TableCell>
+                                        <TableCell className={tableCellCenter}>{equipment.size}</TableCell>
+                                        <TableCell className={tableCellCenter}>{equipment.notes}</TableCell>
+                                        <TableCell className={tableCellCenter}>{equipment.cost}Ü</TableCell>
                                       </TableRow>
                                     ))}
                                   </TableBody>
