@@ -73,6 +73,11 @@ import ActionIcon from "@/assets/icons/mind.svg";
 import MoveRangeIcon from "@/assets/icons/move_range.svg";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { specialtyGroups } from "@/config/specialties";
+import {
+  formatMagikCost,
+  supernaturalCliches,
+  supernaturalDice,
+} from "@/config/magik";
 
 // Import equipment types
 const equipment_types = [
@@ -194,6 +199,11 @@ const remapSpecialty = (specialty) => ({
   id: generateId(),
 });
 
+const remapMagik = (magik) => ({
+  ...magik,
+  id: generateId(),
+});
+
 const remapEquipment = (equipment) => ({
   ...equipment,
   id: generateId(),
@@ -212,6 +222,7 @@ const remapUnit = (unit, options = {}) => ({
   weapons: (unit.weapons || []).map(remapWeapon),
   equipment: (unit.equipment || []).map(remapEquipment),
   specialties: (unit.specialties || []).map(remapSpecialty),
+  magik: (unit.magik || []).map(remapMagik),
 });
 
 const remapSquad = (squad, options = {}) => ({
@@ -274,6 +285,11 @@ const sortableRowStyle = (transform, transition, isDragging) => ({
   zIndex: isDragging ? 1 : 0,
 });
 
+const formatMagikEntry = (entry) =>
+  `${entry.die} ${entry.element} — ${entry.cliche} (+${formatMagikCost(
+    entry.cost
+  )})`;
+
 export default function Home() {
   const [mounted, setMounted] = React.useState(false);
   const [armyName, setArmyName] = useState("");
@@ -321,6 +337,11 @@ export default function Home() {
     group: "",
   });
   const [selectedSpecialties, setSelectedSpecialties] = useState([]);
+  const [magikForm, setMagikForm] = useState({
+    die: "",
+    genre: "",
+    cliche: "",
+  });
 
   React.useEffect(() => {
     setMounted(true);
@@ -412,6 +433,9 @@ export default function Home() {
       id: generateId(),
       unitIcon: unitForm.unitIcon || DEFAULT_UNIT_ICON,
       weapons: [],
+      equipment: [],
+      specialties: [],
+      magik: [],
     };
 
     const updatedSquads = squads.map((squad) => {
@@ -443,6 +467,8 @@ export default function Home() {
                   ...unitForm, // Update with new form values
                   weapons: unit.weapons || [], // Preserve weapons
                   equipment: unit.equipment || [], // Preserve equipment
+                  specialties: unit.specialties || [], // Preserve specialties
+                  magik: unit.magik || [], // Preserve Magik
                 }
               : unit
           ),
@@ -509,24 +535,37 @@ export default function Home() {
       ...unit,
       unitIcon: unit.unitIcon || DEFAULT_UNIT_ICON,
     });
+    setMagikForm({ die: "", genre: "", cliche: "" });
   };
 
   const handleUnselectUnit = () => {
     setSelectedUnit(null);
     setUnitForm(initialUnitForm);
+    setMagikForm({ die: "", genre: "", cliche: "" });
   };
 
   // Calculate the total equipment cost for a unit
   const calculateUnitEquipmentCost = (unit) => {
     return (unit.equipment || []).reduce(
-      (total, equipment) => total + (parseInt(equipment.cost) || 0),
+      (total, equipment) => total + (Number(equipment.cost) || 0),
       0
     );
   };
 
-  // Calculate total points for a single unit (value + equipment)
+  const calculateUnitMagikCost = (unit) => {
+    return (unit.magik || []).reduce(
+      (total, entry) => total + (Number(entry.cost) || 0),
+      0
+    );
+  };
+
+  // Calculate total points for a single unit (value + equipment + Magik)
   const calculateUnitPoints = (unit) => {
-    return parseInt(unit.value || 0) + calculateUnitEquipmentCost(unit);
+    return (
+      (Number(unit.value) || 0) +
+      calculateUnitEquipmentCost(unit) +
+      calculateUnitMagikCost(unit)
+    );
   };
 
   // Calculate total points for a squad
@@ -813,6 +852,77 @@ export default function Home() {
     });
   };
 
+  const handleDeleteMagik = (magikId) => {
+    if (!selectedSquad || !selectedUnit) return;
+
+    setSquads((currentSquads) =>
+      currentSquads.map((squad) =>
+        squad.id === selectedSquad
+          ? {
+              ...squad,
+              units: squad.units.map((unit) =>
+                unit.id === selectedUnit
+                  ? {
+                      ...unit,
+                      magik:
+                        unit.magik?.filter((entry) => entry.id !== magikId) ||
+                        [],
+                    }
+                  : unit
+              ),
+            }
+          : squad
+      )
+    );
+  };
+
+  const handleAddMagik = (e) => {
+    e.preventDefault();
+    if (
+      !selectedSquad ||
+      !selectedUnit ||
+      !magikForm.die ||
+      !magikForm.genre ||
+      !magikForm.cliche
+    ) {
+      return;
+    }
+
+    const selectedDie = supernaturalDice.find(
+      (die) => die.die === magikForm.die
+    );
+    const genreCliches = supernaturalCliches[magikForm.genre] || [];
+    if (!selectedDie || !genreCliches.includes(magikForm.cliche)) return;
+
+    const newMagik = {
+      id: generateId(),
+      die: selectedDie.die,
+      element: selectedDie.element,
+      cost: selectedDie.cost,
+      genre: magikForm.genre,
+      cliche: magikForm.cliche,
+    };
+
+    setSquads((currentSquads) =>
+      currentSquads.map((squad) =>
+        squad.id === selectedSquad
+          ? {
+              ...squad,
+              units: squad.units.map((unit) =>
+                unit.id === selectedUnit
+                  ? {
+                      ...unit,
+                      magik: [...(unit.magik || []), newMagik],
+                    }
+                  : unit
+              ),
+            }
+          : squad
+      )
+    );
+    setMagikForm({ die: "", genre: "", cliche: "" });
+  };
+
   const handleExportPDF = async () => {
     const iconCache = await preloadUnitIconBase64();
     const doc = new jsPDF({ unit: "pt", format: "a4" });
@@ -916,6 +1026,156 @@ export default function Home() {
       y += 12;
     }
 
+    // --- UNIT BLOCK HELPERS ---
+    const unitContentLeft = margin + cardPadding + 8;
+    const sideTableWidth = (pageWidth - margin * 2 - cardPadding * 2 - 16) / 2; // 16px gap between tables
+
+    const buildStatsTableConfig = (unit) => {
+      const statFields = squadFields.filter(isUnitStatField);
+      const statLabels = statFields.map((f) => f.label);
+      const statValues = statFields.map((f) => {
+        if (f.type === "select") {
+          const selectedOption = f.options
+            .flatMap((g) => g.items)
+            .find((i) => i.value === unit[f.id]);
+          return selectedOption ? selectedOption.label : unit[f.id];
+        }
+        return unit[f.id] || "";
+      });
+      return {
+        head: [statLabels],
+        body: [statValues],
+        theme: "grid",
+        headStyles: {
+          fillColor: tableHeaderBg,
+          textColor: tableHeaderText,
+          fontStyle: "bold",
+          fontSize: 9,
+        },
+        styles: {
+          fontSize: 9,
+          textColor: 60,
+          cellPadding: 2.5,
+          halign: "center",
+          valign: "middle",
+          lineColor: 220,
+          lineWidth: 0.1,
+        },
+        margin: {
+          left: unitContentLeft,
+          right: unitContentLeft,
+        },
+      };
+    };
+
+    const buildWeaponsTableConfig = (unit) => ({
+      head: [["Weapon", "Size", "Amount", "Use", "Range", "Damage"]],
+      body: unit.weapons.map((weapon) => [
+        weapon.name || weapon.type,
+        weapon.size,
+        weapon.amount,
+        weapon.use,
+        weapon.range,
+        weapon.damage,
+      ]),
+      theme: "grid",
+      headStyles: {
+        fillColor: tableHeaderBg,
+        textColor: tableHeaderText,
+        fontStyle: "bold",
+        fontSize: 8,
+      },
+      styles: {
+        fontSize: 8,
+        textColor: 80,
+        cellPadding: 2,
+        lineColor: 220,
+        lineWidth: 0.1,
+      },
+      margin: {
+        left: unitContentLeft,
+        right: unitContentLeft + sideTableWidth,
+      },
+      tableWidth: sideTableWidth,
+      pageBreak: "avoid",
+    });
+
+    const buildEquipmentTableConfig = (unit) => ({
+      head: [["Equipment", "Size", "Notes", "Cost"]],
+      body: unit.equipment.map((equipment) => [
+        equipment.type,
+        equipment.size,
+        equipment.notes,
+        equipment.cost,
+      ]),
+      theme: "grid",
+      headStyles: {
+        fillColor: tableHeaderBg,
+        textColor: tableHeaderText,
+        fontStyle: "bold",
+        fontSize: 8,
+      },
+      styles: {
+        fontSize: 8,
+        textColor: 80,
+        cellPadding: 2,
+        lineColor: 220,
+        lineWidth: 0.1,
+      },
+      margin: {
+        left: unitContentLeft + sideTableWidth + 16, // 16px gap
+        right: unitContentLeft,
+      },
+      tableWidth: sideTableWidth,
+      pageBreak: "avoid",
+    });
+
+    // Render a table into a scratch document to get its real height,
+    // including wrapped cell text that flat estimates get wrong.
+    const measureTableHeight = (config) => {
+      const scratch = new jsPDF({ unit: "pt", format: "a4" });
+      autoTable(scratch, { ...config, startY: margin, pageBreak: "auto" });
+      return scratch.lastAutoTable?.finalY
+        ? scratch.lastAutoTable.finalY - margin
+        : 0;
+    };
+
+    const getUnitKeywords = (unit) =>
+      squadFields
+        .filter(
+          (f) => f.type === "switch" && f.id !== "isMinifigure" && unit[f.id]
+        )
+        .map((f) => f.label)
+        .join(", ");
+
+    const getMagikLines = (unit) => {
+      if (!(unit.magik?.length > 0)) return [];
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(8);
+      return doc.splitTextToSize(
+        unit.magik.map(formatMagikEntry).join(", "),
+        pageWidth - unitContentLeft - margin - 16
+      );
+    };
+
+    const measureUnitBlockHeight = (unit) => {
+      let height = lineHeight - 2;
+      if (getUnitKeywords(unit)) height += 13;
+      if (unit.specialties?.length > 0) height += 10;
+      height += getMagikLines(unit).length * 10;
+      height += measureTableHeight(buildStatsTableConfig(unit)) + 2;
+      const weaponsHeight =
+        unit.weapons?.length > 0
+          ? measureTableHeight(buildWeaponsTableConfig(unit)) + 2
+          : 0;
+      const equipmentHeight =
+        unit.equipment?.length > 0
+          ? measureTableHeight(buildEquipmentTableConfig(unit)) + 2
+          : 0;
+      height += Math.max(weaponsHeight, equipmentHeight);
+      return height + 10;
+    };
+
     // --- SQUADS/UNITS ---
     squads.forEach((squad, idx) => {
       if (idx > 0 && y > margin) {
@@ -926,25 +1186,14 @@ export default function Home() {
         y += 16; // Add more space after the line for clarity
       }
 
-      // Estimate height needed for squad name and first unit
+      // Keep the squad name together with its first unit: if the pair
+      // doesn't fit in the remaining space, start a new page.
       let estimatedSquadBlockHeight = lineHeight;
       if (squad.units.length > 0) {
-        let firstUnit = squad.units[0];
-        let unitBlockHeight = lineHeight - 2;
-        const firstKeywords = squadFields
-          .filter(
-            (f) =>
-              f.type === "switch" && f.id !== "isMinifigure" && firstUnit[f.id]
-          )
-          .map((f) => f.label)
-          .join(", ");
-        if (firstKeywords) unitBlockHeight += 13;
-        if (firstUnit.specialties?.length > 0) unitBlockHeight += 10;
-        unitBlockHeight += 40; // estimate for stats table
-        estimatedSquadBlockHeight += unitBlockHeight;
+        estimatedSquadBlockHeight += measureUnitBlockHeight(squad.units[0]);
       }
       const pageHeight = doc.internal.pageSize.getHeight();
-      if (y + estimatedSquadBlockHeight > pageHeight - margin) {
+      if (y + estimatedSquadBlockHeight > pageHeight - margin && y > margin) {
         doc.addPage();
         y = margin;
       }
@@ -962,26 +1211,20 @@ export default function Home() {
 
       // Units
       squad.units.forEach((unit) => {
-        // Estimate height needed for unit header and table
-        let estimatedHeight = lineHeight - 2;
-        const keywords = squadFields
-          .filter(
-            (f) => f.type === "switch" && f.id !== "isMinifigure" && unit[f.id]
-          )
-          .map((f) => f.label)
-          .join(", ");
-        if (keywords) estimatedHeight += 13;
-        if (unit.specialties?.length > 0) estimatedHeight += 10;
-        estimatedHeight += 40; // estimate for stats table
+        const keywords = getUnitKeywords(unit);
 
+        // Move the entire unit block to the next page if it doesn't fit in
+        // the remaining space (unless we're already at the top of a page,
+        // in which case an oversized unit has to split anyway).
+        const unitBlockHeight = measureUnitBlockHeight(unit);
         const pageHeight = doc.internal.pageSize.getHeight();
-        if (y + estimatedHeight > pageHeight - margin) {
+        if (y + unitBlockHeight > pageHeight - margin && y > margin) {
           doc.addPage();
           y = margin;
         }
 
         // Store the unit name and y position
-        const unitNameX = margin + cardPadding + 8;
+        const unitNameX = unitContentLeft;
         let unitNameY = y;
 
         drawUnitHeader(doc, unit, unitNameX, unitNameY);
@@ -1010,43 +1253,20 @@ export default function Home() {
           doc.text(specialties, unitNameX + 16, unitNameY);
           unitNameY += 10;
         }
+        // Add Magik
+        const magikLines = getMagikLines(unit);
+        if (magikLines.length > 0) {
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(8);
+          doc.setTextColor(50, 50, 50);
+          doc.text(magikLines, unitNameX + 16, unitNameY);
+          unitNameY += magikLines.length * 10;
+        }
         let afterNameY = unitNameY;
         // --- UNIT STATS TABLE ---
-        const statFields = squadFields.filter(isUnitStatField);
-        const statLabels = statFields.map((f) => f.label);
-        const statValues = statFields.map((f) => {
-          if (f.type === "select") {
-            const selectedOption = f.options
-              .flatMap((g) => g.items)
-              .find((i) => i.value === unit[f.id]);
-            return selectedOption ? selectedOption.label : unit[f.id];
-          }
-          return unit[f.id] || "";
-        });
         autoTable(doc, {
+          ...buildStatsTableConfig(unit),
           startY: afterNameY,
-          head: [statLabels],
-          body: [statValues],
-          theme: "grid",
-          headStyles: {
-            fillColor: tableHeaderBg,
-            textColor: tableHeaderText,
-            fontStyle: "bold",
-            fontSize: 9,
-          },
-          styles: {
-            fontSize: 9,
-            textColor: 60,
-            cellPadding: 2.5,
-            halign: "center",
-            valign: "middle",
-            lineColor: 220,
-            lineWidth: 0.1,
-          },
-          margin: {
-            left: margin + cardPadding + 8,
-            right: margin + cardPadding + 8,
-          },
           didDrawPage: (data) => {
             if (data.pageNumber > 1 || data.settings.startY < afterNameY) {
               drawUnitHeader(doc, unit, unitNameX, data.settings.margin.top);
@@ -1059,44 +1279,14 @@ export default function Home() {
         y = lastTableY;
         // --- WEAPONS & EQUIPMENT TABLES SIDE BY SIDE ---
         const tableStartY = y;
-        const tableWidth = (pageWidth - margin * 2 - cardPadding * 2 - 16) / 2; // 16px gap between tables
 
         let lastWeaponTableY = tableStartY;
         let lastEquipmentTableY = tableStartY;
 
         if (unit.weapons?.length > 0) {
-          const weaponsData = unit.weapons.map((weapon) => [
-            weapon.name || weapon.type,
-            weapon.size,
-            weapon.amount,
-            weapon.use,
-            weapon.range,
-            weapon.damage,
-          ]);
           autoTable(doc, {
+            ...buildWeaponsTableConfig(unit),
             startY: tableStartY,
-            head: [["Weapon", "Size", "Amount", "Use", "Range", "Damage"]],
-            body: weaponsData,
-            theme: "grid",
-            headStyles: {
-              fillColor: tableHeaderBg,
-              textColor: tableHeaderText,
-              fontStyle: "bold",
-              fontSize: 8,
-            },
-            styles: {
-              fontSize: 8,
-              textColor: 80,
-              cellPadding: 2,
-              lineColor: 220,
-              lineWidth: 0.1,
-            },
-            margin: {
-              left: margin + cardPadding + 8,
-              right: margin + cardPadding + 8 + tableWidth,
-            },
-            tableWidth: tableWidth,
-            pageBreak: "avoid",
           });
           lastWeaponTableY = doc.lastAutoTable.finalY
             ? doc.lastAutoTable.finalY + 2
@@ -1104,36 +1294,9 @@ export default function Home() {
         }
 
         if (unit.equipment?.length > 0) {
-          const equipmentData = unit.equipment.map((equipment) => [
-            equipment.type,
-            equipment.size,
-            equipment.notes,
-            equipment.cost,
-          ]);
           autoTable(doc, {
+            ...buildEquipmentTableConfig(unit),
             startY: tableStartY,
-            head: [["Equipment", "Size", "Notes", "Cost"]],
-            body: equipmentData,
-            theme: "grid",
-            headStyles: {
-              fillColor: tableHeaderBg,
-              textColor: tableHeaderText,
-              fontStyle: "bold",
-              fontSize: 8,
-            },
-            styles: {
-              fontSize: 8,
-              textColor: 80,
-              cellPadding: 2,
-              lineColor: 220,
-              lineWidth: 0.1,
-            },
-            margin: {
-              left: margin + cardPadding + 8 + tableWidth + 16, // 16px gap
-              right: margin + cardPadding + 8,
-            },
-            tableWidth: tableWidth,
-            pageBreak: "avoid",
           });
           lastEquipmentTableY = doc.lastAutoTable.finalY
             ? doc.lastAutoTable.finalY + 2
@@ -1490,7 +1653,7 @@ export default function Home() {
           <CardContent>
             {selectedSquadData ? (
               <Tabs defaultValue="unit" className="w-full">
-                <TabsList className="grid w-full grid-cols-4">
+                <TabsList className="grid w-full grid-cols-5">
                   <TabsTrigger value="unit">Unit</TabsTrigger>
                   <TabsTrigger
                     value="weapons"
@@ -1518,6 +1681,15 @@ export default function Home() {
                     }
                   >
                     Specialties
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="magik"
+                    disabled={!selectedUnit}
+                    className={
+                      !selectedUnit ? "opacity-50 cursor-not-allowed" : ""
+                    }
+                  >
+                    Magik
                   </TabsTrigger>
                 </TabsList>
                 <TabsContent value="unit" className="space-y-4">
@@ -1571,7 +1743,7 @@ export default function Home() {
                               value={weaponForm.type}
                               onValueChange={handleWeaponTypeChange}
                             >
-                              <SelectTrigger>
+                              <SelectTrigger className="w-full">
                                 <SelectValue placeholder="Select weapon type" />
                               </SelectTrigger>
                               <SelectContent>
@@ -1718,7 +1890,7 @@ export default function Home() {
                               value={equipmentForm.type}
                               onValueChange={handleEquipmentTypeChange}
                             >
-                              <SelectTrigger>
+                              <SelectTrigger className="w-full">
                                 <SelectValue placeholder="Select equipment type" />
                               </SelectTrigger>
                               <SelectContent>
@@ -1842,7 +2014,7 @@ export default function Home() {
                               setSpecialtyForm({ type: value })
                             }
                           >
-                            <SelectTrigger>
+                            <SelectTrigger className="w-full">
                               <SelectValue placeholder="Select specialty" />
                             </SelectTrigger>
                             <SelectContent>
@@ -1917,6 +2089,193 @@ export default function Home() {
                     <div className="flex items-center justify-center h-32 border-2 border-dashed rounded-lg">
                       <p className="text-sm text-muted-foreground">
                         Select a unit to manage specialties
+                      </p>
+                    </div>
+                  )}
+                </TabsContent>
+                <TabsContent value="magik" className="space-y-4">
+                  {selectedUnit ? (
+                    <>
+                      <form onSubmit={handleAddMagik} className="space-y-4">
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                        <div className="min-w-0 space-y-2">
+                          <Label htmlFor="supernaturalDie">
+                            SuperNatural Die
+                          </Label>
+                          <Select
+                            value={magikForm.die}
+                            onValueChange={(die) =>
+                              setMagikForm((current) => ({ ...current, die }))
+                            }
+                          >
+                            <SelectTrigger
+                              id="supernaturalDie"
+                              className="w-full"
+                            >
+                              <SelectValue placeholder="Select SuperNatural Die" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {supernaturalDice.map((die) => (
+                                <SelectItem key={die.die} value={die.die}>
+                                  {die.die} · {die.element} ·{" "}
+                                  {formatMagikCost(die.cost)}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div className="min-w-0 space-y-2">
+                          <Label htmlFor="supernaturalGenre">
+                            SuperNatural Genre
+                          </Label>
+                          <Select
+                            value={magikForm.genre}
+                            onValueChange={(genre) =>
+                              setMagikForm((current) => ({
+                                ...current,
+                                genre,
+                                cliche: "",
+                              }))
+                            }
+                          >
+                            <SelectTrigger
+                              id="supernaturalGenre"
+                              className="w-full"
+                            >
+                              <SelectValue placeholder="Select genre" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {Object.keys(supernaturalCliches).map((genre) => (
+                                <SelectItem key={genre} value={genre}>
+                                  {genre}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div className="min-w-0 space-y-2">
+                          <Label htmlFor="supernaturalCliche">Cliché</Label>
+                          <Select
+                            value={magikForm.cliche}
+                            disabled={!magikForm.genre}
+                            onValueChange={(cliche) =>
+                              setMagikForm((current) => ({
+                                ...current,
+                                cliche,
+                              }))
+                            }
+                          >
+                            <SelectTrigger
+                              id="supernaturalCliche"
+                              className="w-full"
+                            >
+                              <SelectValue
+                                placeholder={
+                                  magikForm.genre
+                                    ? "Select cliché"
+                                    : "Select a genre first"
+                                }
+                              />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {(supernaturalCliches[magikForm.genre] || []).map(
+                                (cliche) => (
+                                  <SelectItem key={cliche} value={cliche}>
+                                    {cliche}
+                                  </SelectItem>
+                                )
+                              )}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        </div>
+
+                        <Button
+                          type="submit"
+                          className="w-full"
+                          disabled={
+                            !magikForm.die ||
+                            !magikForm.genre ||
+                            !magikForm.cliche
+                          }
+                        >
+                          Add SuperNatural Die
+                        </Button>
+                      </form>
+
+                      <div className="space-y-2 mt-4">
+                        <h4 className="font-medium">
+                          Current SuperNatural Dice
+                        </h4>
+                        <div className="max-h-[240px] overflow-auto">
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead className={tableHeadActions}>
+                                  Actions
+                                </TableHead>
+                                <TableHead className={tableHeadCenter}>
+                                  Die
+                                </TableHead>
+                                <TableHead className={tableHeadCenter}>
+                                  Element
+                                </TableHead>
+                                <TableHead className={tableHeadName}>
+                                  Genre
+                                </TableHead>
+                                <TableHead className={tableHeadName}>
+                                  Cliché
+                                </TableHead>
+                                <TableHead className={tableHeadCenter}>
+                                  Value
+                                </TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {selectedSquadData.units
+                                .find((unit) => unit.id === selectedUnit)
+                                ?.magik?.map((entry) => (
+                                  <TableRow key={entry.id}>
+                                    <TableCell className={tableCellActions}>
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() =>
+                                          handleDeleteMagik(entry.id)
+                                        }
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                    </TableCell>
+                                    <TableCell className={tableCellCenter}>
+                                      {entry.die}
+                                    </TableCell>
+                                    <TableCell className={tableCellCenter}>
+                                      {entry.element}
+                                    </TableCell>
+                                    <TableCell className={tableCellName}>
+                                      {entry.genre}
+                                    </TableCell>
+                                    <TableCell className={tableCellName}>
+                                      {entry.cliche}
+                                    </TableCell>
+                                    <TableCell className={tableCellCenter}>
+                                      {formatMagikCost(entry.cost)}
+                                    </TableCell>
+                                  </TableRow>
+                                ))}
+                            </TableBody>
+                          </Table>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex items-center justify-center h-32 border-2 border-dashed rounded-lg">
+                      <p className="text-sm text-muted-foreground">
+                        Select a unit to manage Magik
                       </p>
                     </div>
                   )}
@@ -2029,6 +2388,11 @@ export default function Home() {
                                 setSpecialtyForm({
                                   type: "",
                                   group: "",
+                                });
+                                setMagikForm({
+                                  die: "",
+                                  genre: "",
+                                  cliche: "",
                                 });
                               }}
                             >
@@ -2288,6 +2652,24 @@ export default function Home() {
                                         {specialty.cost}Ü
                                       </span>
                                     )}
+                                  </div>
+                                ))}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        )}
+                        {unit.magik?.length > 0 && (
+                          <TableRow>
+                            <TableCell
+                              colSpan={squadFields.filter(isUnitTableField).length + 2}
+                            >
+                              <div className="flex flex-wrap gap-2">
+                                {unit.magik.map((entry) => (
+                                  <div
+                                    key={entry.id}
+                                    className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary text-primary-foreground hover:bg-primary/80"
+                                  >
+                                    {formatMagikEntry(entry)}
                                   </div>
                                 ))}
                               </div>
