@@ -28,7 +28,7 @@ export const unitIcons = [
   { id: "gun", label: "Gun", src: gunIcon },
   { id: "sniper-rifle", label: "Sniper", src: sniperRifleIcon },
   { id: "gatling-gun", label: "Heavy", src: gatlingGunIcon },
-  { id: "sledgehammer", label: "Brutefig", src: sledgehammerIcon },
+  { id: "sledgehammer", label: "Hammer", src: sledgehammerIcon },
   { id: "rocket-boot", label: "Flyer", src: rocketBootIcon },
   { id: "knight", label: "Cavalry", src: knightIcon },
   { id: "wizard", label: "Wizard", src: wizardIcon },
