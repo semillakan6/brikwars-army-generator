@@ -440,9 +440,17 @@ export default function Home() {
     setUnitForm(initialUnitForm);
   };
 
-  // Calculate total points for a unit
+  // Calculate the total equipment cost for a unit
+  const calculateUnitEquipmentCost = (unit) => {
+    return (unit.equipment || []).reduce(
+      (total, equipment) => total + (parseInt(equipment.cost) || 0),
+      0
+    );
+  };
+
+  // Calculate total points for a single unit (value + equipment)
   const calculateUnitPoints = (unit) => {
-    return parseInt(unit.value || 0);
+    return parseInt(unit.value || 0) + calculateUnitEquipmentCost(unit);
   };
 
   // Calculate total points for a squad
@@ -1982,6 +1990,16 @@ export default function Home() {
                                     .flatMap((group) => group.items)
                                     .find((item) => item.value === unit[field.id])
                                     ?.label || unit[field.id]
+                                ) : field.id === "value" ? (
+                                  <span>
+                                    {unit[field.id]}{" "}
+                                    <span className="text-muted-foreground">
+                                      (Total:{" "}
+                                      {calculateUnitPoints(unit) *
+                                        (parseInt(unit.unit_number) || 1)}
+                                      Ü)
+                                    </span>
+                                  </span>
                                 ) : (
                                   unit[field.id]
                                 )}
