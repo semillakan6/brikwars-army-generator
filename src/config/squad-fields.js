@@ -12,6 +12,12 @@ export const squadFields = [
     required: true
   },
   {
+    id: "isMinifigure",
+    label: "Is a minifigure?",
+    type: "switch",
+    required: false
+  },
+  {
     id: "unit_number",
     label: "Unit Amount",
     type: "text",
@@ -37,12 +43,6 @@ export const squadFields = [
     type: "number",
     min: 1,
     icon: "/icons/power.svg"
-  },
-  {
-    id: "isMinifigure",
-    label: "Is a minifigure?",
-    type: "switch",
-    required: false
   },
   {
     id: "hasDeflection",

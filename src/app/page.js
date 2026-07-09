@@ -1265,6 +1265,11 @@ export default function Home() {
               onChange={(e) =>
                 setUnitForm({ ...unitForm, [field.id]: e.target.value })
               }
+              onWheel={
+                field.type === "number"
+                  ? (e) => e.currentTarget.blur()
+                  : undefined
+              }
               placeholder={field.placeholder}
               required={field.required}
               disabled={field.id === "power" && unitForm.isMinifigure}
@@ -1297,9 +1302,16 @@ export default function Home() {
                 setUnitForm({
                   ...unitForm,
                   [field.id]: checked,
-                  // When isMinifigure is toggled on, set power to 1
+                  // When isMinifigure is toggled on, lock power at 1 and
+                  // pre-fill typical minifigure stats (these stay editable).
                   ...(field.id === "isMinifigure" && checked
-                    ? { power: "1" }
+                    ? {
+                        power: "1",
+                        size: "1",
+                        armor: "4",
+                        move: "5",
+                        value: "1",
+                      }
                     : {}),
                 });
               }}
@@ -1557,6 +1569,7 @@ export default function Home() {
                               type="number"
                               min="1"
                               value={weaponForm.size}
+                              onWheel={(e) => e.currentTarget.blur()}
                               onChange={(e) =>
                                 handleWeaponSizeChange(parseInt(e.target.value))
                               }
@@ -1574,6 +1587,7 @@ export default function Home() {
                               type="number"
                               min="1"
                               value={weaponForm.amount}
+                              onWheel={(e) => e.currentTarget.blur()}
                               onChange={(e) =>
                                 setWeaponForm({
                                   ...weaponForm,
@@ -1695,6 +1709,7 @@ export default function Home() {
                               min="1"
                               placeholder="Enter size"
                               value={equipmentForm.size}
+                              onWheel={(e) => e.currentTarget.blur()}
                               onChange={(e) =>
                                 setEquipmentForm({
                                   ...equipmentForm,
