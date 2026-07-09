@@ -28,7 +28,7 @@ export const squadFields = [
     id: "size",
     label: "Size",
     type: "number",
-    min: 1,
+    min: 0,
     icon: "/icons/size.svg"
   },
   {
@@ -41,7 +41,7 @@ export const squadFields = [
     id: "power",
     label: "Power",
     type: "number",
-    min: 1,
+    min: 0,
     icon: "/icons/power.svg"
   },
   {
@@ -71,7 +71,7 @@ export const squadFields = [
     id: "value",
     label: "Value",
     type: "number",
-    min: 1,
+    min: 0,
     icon: "/icons/value.svg"
   },
   {
