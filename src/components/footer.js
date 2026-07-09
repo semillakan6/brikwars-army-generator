@@ -53,7 +53,7 @@ export function Footer() {
             .
           </p>
           <p className="text-center text-xs text-muted-foreground md:text-left">
-            © 2024-2025 BrikWars Army Generator. Licensed under MIT. This is an unofficial fan tool and is not affiliated with BrikWars.
+            © 2024-2026 BrikWars Army Generator. Licensed under MIT. This is an unofficial fan tool and is not affiliated with BrikWars.
           </p>
         </div>
         <div className="flex items-center gap-4">

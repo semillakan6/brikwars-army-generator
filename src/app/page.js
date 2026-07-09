@@ -35,9 +35,24 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Separator } from "@/components/ui/separator";
-import { Plus, Trash2, Download, Upload, X, Copy } from "lucide-react";
+import { Plus, Trash2, Download, Upload, X, Copy, GripVertical } from "lucide-react";
 import { useState, useEffect } from "react";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  KeyboardSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  sortableKeyboardCoordinates,
+  arrayMove,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { squadFields } from "@/config/squad-fields";
 import {
   DEFAULT_UNIT_ICON,
@@ -228,6 +243,37 @@ const unitTableHeadClass = (fieldId) =>
 const unitTableCellClass = (fieldId) =>
   fieldId === "name" ? tableCellName : tableCellCenter;
 
+// Render-prop wrapper that exposes @dnd-kit sortable state to a table row.
+// Keeping this at module scope avoids remounting the row (and losing drag
+// state) on every parent re-render.
+const SortableRow = ({ id, children }) => {
+  const sortable = useSortable({ id });
+  return children(sortable);
+};
+
+const DragHandleCell = ({ attributes, listeners, className }) => (
+  <TableCell className={className}>
+    <button
+      type="button"
+      className="flex cursor-grab touch-none items-center justify-center text-muted-foreground hover:text-foreground active:cursor-grabbing"
+      aria-label="Drag to reorder"
+      onClick={(e) => e.stopPropagation()}
+      {...attributes}
+      {...listeners}
+    >
+      <GripVertical className="h-4 w-4" />
+    </button>
+  </TableCell>
+);
+
+const sortableRowStyle = (transform, transition, isDragging) => ({
+  transform: CSS.Transform.toString(transform),
+  transition,
+  opacity: isDragging ? 0.5 : 1,
+  position: "relative",
+  zIndex: isDragging ? 1 : 0,
+});
+
 export default function Home() {
   const [mounted, setMounted] = React.useState(false);
   const [armyName, setArmyName] = useState("");
@@ -309,6 +355,36 @@ export default function Home() {
       setSelectedUnit(null);
     }
   };
+
+  const handleReorderSquads = (activeId, overId) => {
+    if (activeId === overId) return;
+    setSquads((prev) => {
+      const oldIndex = prev.findIndex((squad) => squad.id === activeId);
+      const newIndex = prev.findIndex((squad) => squad.id === overId);
+      if (oldIndex === -1 || newIndex === -1) return prev;
+      return arrayMove(prev, oldIndex, newIndex);
+    });
+  };
+
+  const handleReorderUnits = (squadId, activeId, overId) => {
+    if (activeId === overId) return;
+    setSquads((prev) =>
+      prev.map((squad) => {
+        if (squad.id !== squadId) return squad;
+        const oldIndex = squad.units.findIndex((unit) => unit.id === activeId);
+        const newIndex = squad.units.findIndex((unit) => unit.id === overId);
+        if (oldIndex === -1 || newIndex === -1) return squad;
+        return { ...squad, units: arrayMove(squad.units, oldIndex, newIndex) };
+      })
+    );
+  };
+
+  const dndSensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   const handleDuplicateSquad = (squadId) => {
     const squadIndex = squads.findIndex((squad) => squad.id === squadId);
@@ -1843,84 +1919,121 @@ export default function Home() {
               <CardDescription>Your army composition</CardDescription>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className={tableHeadName}>Squad Name</TableHead>
-                    <TableHead className={tableHeadCenter}>Units</TableHead>
-                    <TableHead className={tableHeadCenter}>Points</TableHead>
-                    <TableHead className={tableHeadActions}>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {squads.map((squad) => (
-                    <TableRow
-                      key={squad.id}
-                      className={selectedSquad === squad.id ? "bg-muted" : ""}
-                      onClick={() => {
-                        setSelectedSquad(squad.id);
-                        setSelectedUnit(null);
-                        setUnitForm(initialUnitForm);
-                        setWeaponForm({
-                          type: "",
-                          size: 1,
-                          amount: 1,
-                          name: "",
-                          use: 0,
-                          range: 0,
-                          damage: "",
-                        });
-                        setEquipmentForm({
-                          type: "",
-                          size: 1,
-                          notes: "",
-                        });
-                        setSpecialtyForm({
-                          type: "",
-                          group: "",
-                        });
-                      }}
-                    >
-                      <TableCell className={tableCellName}>
-                        {squad.name}
-                      </TableCell>
-                      <TableCell className={tableCellCenter}>
-                        {squad.units.reduce((total, unit) => total + (parseInt(unit.unit_number) || 1), 0)} ({squad.units.length})
-                      </TableCell>
-                      <TableCell className={tableCellCenter}>{calculateSquadPoints(squad)}Ü</TableCell>
-                      <TableCell className={tableCellActions}>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDuplicateSquad(squad.id);
-                          }}
-                        >
-                          <Copy className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteSquad(squad.id);
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                  {squads.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={4} className="text-center">
-                        No squads created yet
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
+              <DndContext
+                sensors={dndSensors}
+                collisionDetection={closestCenter}
+                onDragEnd={({ active, over }) => {
+                  if (over) handleReorderSquads(active.id, over.id);
+                }}
+              >
+                <SortableContext
+                  items={squads.map((squad) => squad.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className={tableHeadActions}></TableHead>
+                        <TableHead className={tableHeadName}>Squad Name</TableHead>
+                        <TableHead className={tableHeadCenter}>Units</TableHead>
+                        <TableHead className={tableHeadCenter}>Points</TableHead>
+                        <TableHead className={tableHeadActions}>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {squads.map((squad) => (
+                        <SortableRow key={squad.id} id={squad.id}>
+                          {({
+                            setNodeRef,
+                            attributes,
+                            listeners,
+                            transform,
+                            transition,
+                            isDragging,
+                          }) => (
+                            <TableRow
+                              ref={setNodeRef}
+                              style={sortableRowStyle(
+                                transform,
+                                transition,
+                                isDragging
+                              )}
+                              className={
+                                selectedSquad === squad.id ? "bg-muted" : ""
+                              }
+                              onClick={() => {
+                                setSelectedSquad(squad.id);
+                                setSelectedUnit(null);
+                                setUnitForm(initialUnitForm);
+                                setWeaponForm({
+                                  type: "",
+                                  size: 1,
+                                  amount: 1,
+                                  name: "",
+                                  use: 0,
+                                  range: 0,
+                                  damage: "",
+                                });
+                                setEquipmentForm({
+                                  type: "",
+                                  size: 1,
+                                  notes: "",
+                                });
+                                setSpecialtyForm({
+                                  type: "",
+                                  group: "",
+                                });
+                              }}
+                            >
+                              <DragHandleCell
+                                attributes={attributes}
+                                listeners={listeners}
+                                className={tableCellActions}
+                              />
+                              <TableCell className={tableCellName}>
+                                {squad.name}
+                              </TableCell>
+                              <TableCell className={tableCellCenter}>
+                                {squad.units.reduce((total, unit) => total + (parseInt(unit.unit_number) || 1), 0)} ({squad.units.length})
+                              </TableCell>
+                              <TableCell className={tableCellCenter}>{calculateSquadPoints(squad)}Ü</TableCell>
+                              <TableCell className={tableCellActions}>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDuplicateSquad(squad.id);
+                                  }}
+                                >
+                                  <Copy className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteSquad(squad.id);
+                                  }}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          )}
+                        </SortableRow>
+                      ))}
+                      {squads.length === 0 && (
+                        <TableRow>
+                          <TableCell colSpan={5} className="text-center">
+                            No squads created yet
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </SortableContext>
+              </DndContext>
             </CardContent>
           </Card>
 
@@ -1950,9 +2063,26 @@ export default function Home() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
+                <DndContext
+                  sensors={dndSensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={({ active, over }) => {
+                    if (over)
+                      handleReorderUnits(
+                        selectedSquadData.id,
+                        active.id,
+                        over.id
+                      );
+                  }}
+                >
+                  <SortableContext
+                    items={selectedSquadData.units.map((unit) => unit.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead className={tableHeadActions}></TableHead>
                       {squadFields.filter(isUnitTableField).map((field) => (
                           <TableHead
                             key={field.id}
@@ -1964,13 +2094,33 @@ export default function Home() {
                       <TableHead className={tableHeadActions}>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
-                  <TableBody>
+                    <TableBody>
                     {selectedSquadData.units.map((unit) => (
-                      <React.Fragment key={unit.id}>
+                      <SortableRow key={unit.id} id={unit.id}>
+                        {({
+                          setNodeRef,
+                          attributes,
+                          listeners,
+                          transform,
+                          transition,
+                          isDragging,
+                        }) => (
+                      <React.Fragment>
                         <TableRow
+                          ref={setNodeRef}
+                          style={sortableRowStyle(
+                            transform,
+                            transition,
+                            isDragging
+                          )}
                           className={selectedUnit === unit.id ? "bg-muted" : ""}
                           onClick={() => handleUnitClick(unit)}
                         >
+                          <DragHandleCell
+                            attributes={attributes}
+                            listeners={listeners}
+                            className={tableCellActions}
+                          />
                           {squadFields.filter(isUnitTableField).map((field) => (
                               <TableCell
                                 key={field.id}
@@ -2041,7 +2191,7 @@ export default function Home() {
                         ).length > 0 && (
                           <TableRow>
                             <TableCell
-                              colSpan={squadFields.filter(isUnitTableField).length + 1}
+                              colSpan={squadFields.filter(isUnitTableField).length + 2}
                             >
                               <div className="text-sm text-muted-foreground italic">
                                 {squadFields
@@ -2062,7 +2212,7 @@ export default function Home() {
                         {unit.hasDeflection && (
                           <TableRow>
                             <TableCell
-                              colSpan={squadFields.filter(isUnitTableField).length + 1}
+                              colSpan={squadFields.filter(isUnitTableField).length + 2}
                             >
                               <div className="flex flex-wrap gap-2">
                                 <div className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary text-primary-foreground hover:bg-primary/80">
@@ -2076,7 +2226,7 @@ export default function Home() {
                         {unit.specialties?.length > 0 && (
                           <TableRow>
                             <TableCell
-                              colSpan={squadFields.filter(isUnitTableField).length + 1}
+                              colSpan={squadFields.filter(isUnitTableField).length + 2}
                             >
                               <div className="flex flex-wrap gap-2">
                                 {unit.specialties.map((specialty) => (
@@ -2100,7 +2250,7 @@ export default function Home() {
                         {unit.weapons?.length > 0 && (
                           <TableRow>
                             <TableCell
-                              colSpan={squadFields.filter(isUnitTableField).length + 1}
+                              colSpan={squadFields.filter(isUnitTableField).length + 2}
                             >
                               <div className="pl-4">
                                 <Table>
@@ -2136,7 +2286,7 @@ export default function Home() {
                         {unit.equipment?.length > 0 && (
                           <TableRow>
                             <TableCell
-                              colSpan={squadFields.filter(isUnitTableField).length + 1}
+                              colSpan={squadFields.filter(isUnitTableField).length + 2}
                             >
                               <div className="pl-4">
                                 <Table>
@@ -2164,9 +2314,13 @@ export default function Home() {
                           </TableRow>
                         )}
                       </React.Fragment>
+                        )}
+                      </SortableRow>
                     ))}
-                  </TableBody>
+                    </TableBody>
                 </Table>
+                  </SortableContext>
+                </DndContext>
               </CardContent>
             </Card>
           )}
