@@ -19,6 +19,7 @@ import sniperRifleIcon from "@/assets/unit_icons/icons8-sniper-rifle-48.png";
 import gunIcon from "@/assets/unit_icons/icons8-gun-48.png";
 import sledgehammerIcon from "@/assets/unit_icons/icons8-sledgehammer-48.png";
 import orcIcon from "@/assets/unit_icons/icons8-orc-48.png";
+import assassinIcon from "@/assets/unit_icons/icons8-murder-48.png";
 
 export const DEFAULT_UNIT_ICON = "pawn";
 
@@ -27,6 +28,7 @@ export const unitIcons = [
   { id: "archer", label: "Archer", src: archerIcon },
   { id: "gun", label: "Gun", src: gunIcon },
   { id: "sniper-rifle", label: "Sniper", src: sniperRifleIcon },
+  { id: "assassin", label: "Assassin", src: assassinIcon },
   { id: "gatling-gun", label: "Heavy", src: gatlingGunIcon },
   { id: "sledgehammer", label: "Hammer", src: sledgehammerIcon },
   { id: "rocket-boot", label: "Flyer", src: rocketBootIcon },
