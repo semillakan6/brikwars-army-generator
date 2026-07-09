@@ -15,13 +15,20 @@ import doctorIcon from "@/assets/unit_icons/icons8-doctors-bag-48.png";
 import crownIcon from "@/assets/unit_icons/icons8-crown-48.png";
 import commanderIcon from "@/assets/unit_icons/icons8-commander-48.png";
 import archerIcon from "@/assets/unit_icons/icons8-archer-48.png";
+import sniperRifleIcon from "@/assets/unit_icons/icons8-sniper-rifle-48.png";
+import gunIcon from "@/assets/unit_icons/icons8-gun-48.png";
+import sledgehammerIcon from "@/assets/unit_icons/icons8-sledgehammer-48.png";
+import orcIcon from "@/assets/unit_icons/icons8-orc-48.png";
 
 export const DEFAULT_UNIT_ICON = "pawn";
 
 export const unitIcons = [
   { id: "pawn", label: "Regular", src: pawnIcon },
   { id: "archer", label: "Archer", src: archerIcon },
+  { id: "gun", label: "Gun", src: gunIcon },
+  { id: "sniper-rifle", label: "Sniper", src: sniperRifleIcon },
   { id: "gatling-gun", label: "Heavy", src: gatlingGunIcon },
+  { id: "sledgehammer", label: "Brutefig", src: sledgehammerIcon },
   { id: "rocket-boot", label: "Flyer", src: rocketBootIcon },
   { id: "knight", label: "Cavalry", src: knightIcon },
   { id: "wizard", label: "Wizard", src: wizardIcon },
@@ -30,6 +37,7 @@ export const unitIcons = [
   { id: "commander", label: "Commander", src: commanderIcon },
   { id: "tank", label: "Tank", src: tankIcon },
   { id: "catapult", label: "Artillery", src: catapultIcon },
+  { id: "orc", label: "Orc", src: orcIcon },
   { id: "dragon", label: "Dragon", src: dragonIcon },
   { id: "monster", label: "Monster", src: monsterIcon },
   { id: "space-ship", label: "Space Ship", src: spaceShipIcon },
