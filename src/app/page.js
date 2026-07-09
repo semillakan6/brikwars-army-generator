@@ -1822,7 +1822,7 @@ export default function Home() {
 
                       <div className="space-y-2 mt-4">
                         <h4 className="font-medium">Current Weapons</h4>
-                        <div className="max-h-[200px] overflow-y-auto">
+                        <div className="overflow-x-auto">
                           <Table>
                             <TableHeader>
                               <TableRow>
@@ -1953,7 +1953,7 @@ export default function Home() {
 
                       <div className="space-y-2 mt-4">
                         <h4 className="font-medium">Current Equipment</h4>
-                        <div className="max-h-[200px] overflow-y-auto">
+                        <div className="overflow-x-auto">
                           <Table>
                             <TableHeader>
                               <TableRow>
@@ -2045,7 +2045,7 @@ export default function Home() {
 
                       <div className="space-y-2 mt-4">
                         <h4 className="font-medium">Current Specialties</h4>
-                        <div className="max-h-[200px] overflow-y-auto">
+                        <div className="overflow-x-auto">
                           <Table>
                             <TableHeader>
                               <TableRow>
@@ -2209,7 +2209,7 @@ export default function Home() {
                         <h4 className="font-medium">
                           Current SuperNatural Dice
                         </h4>
-                        <div className="max-h-[240px] overflow-auto">
+                        <div className="overflow-x-auto">
                           <Table>
                             <TableHeader>
                               <TableRow>
