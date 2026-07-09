@@ -856,6 +856,66 @@ export default function Home() {
     );
     y += lineHeight + 6;
 
+    const contentWidth = pageWidth - margin * 2;
+    const rulesLineHeight = 14;
+
+    const ensurePageSpace = (neededHeight) => {
+      const pageHeight = doc.internal.pageSize.getHeight();
+      if (y + neededHeight > pageHeight - margin) {
+        doc.addPage();
+        y = margin;
+      }
+    };
+
+    const drawWrappedText = (text, x, startY, maxWidth, fontStyle = "normal") => {
+      doc.setFont("helvetica", fontStyle);
+      doc.setFontSize(10);
+      doc.setTextColor(60);
+      const lines = doc.splitTextToSize(text, maxWidth);
+      let currentY = startY;
+      lines.forEach((line) => {
+        ensurePageSpace(rulesLineHeight);
+        doc.text(line, x, currentY);
+        currentY += rulesLineHeight;
+      });
+      return currentY;
+    };
+
+    // --- SPECIAL RULES (below army name) ---
+    if (armyRules.trim()) {
+      ensurePageSpace(lineHeight + rulesLineHeight);
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(30, 30, 30);
+      doc.text("Special Rules", margin, y);
+      y += lineHeight;
+
+      const rulesLines = armyRules.split(/\n|\r/).filter(Boolean);
+      rulesLines.forEach((line, index) => {
+        const trimmedLine = line.trim();
+        const match = trimmedLine.match(/^(.+?):\s*(.*)$/);
+
+        if (match && match[2]) {
+          ensurePageSpace(rulesLineHeight);
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(10);
+          doc.setTextColor(60);
+          doc.text(`${match[1].trim()}:`, margin, y);
+          y += rulesLineHeight;
+
+          y = drawWrappedText(match[2].trim(), margin, y, contentWidth);
+        } else {
+          y = drawWrappedText(trimmedLine, margin, y, contentWidth);
+        }
+
+        if (index < rulesLines.length - 1) {
+          y += 6;
+        }
+      });
+
+      y += 12;
+    }
+
     // --- SQUADS/UNITS ---
     squads.forEach((squad, idx) => {
       if (idx > 0 && y > margin) {
@@ -1085,34 +1145,6 @@ export default function Home() {
         y += 10;
       });
     });
-
-    // --- SPECIAL RULES SECTION (at end) ---
-    if (armyRules.trim()) {
-      y += 16;
-      doc.setFontSize(14);
-      doc.setFont("helvetica", "bold");
-      doc.setTextColor(30, 30, 30);
-      doc.text("Special Rules", margin, y);
-      y += lineHeight;
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(10);
-      doc.setTextColor(60);
-      // Bold rule names if formatted as "Name: Description"
-      const rulesLines = armyRules.split(/\n|\r/).filter(Boolean);
-      rulesLines.forEach((line) => {
-        const match = line.match(/^(\w[\w\s\-\(\)]+):\s*(.*)$/);
-        if (match) {
-          doc.setFont("helvetica", "bold");
-          doc.text(match[1] + ":", margin, y);
-          doc.setFont("helvetica", "normal");
-          doc.text(match[2], margin + 60, y);
-        } else {
-          doc.setFont("helvetica", "normal");
-          doc.text(line, margin, y);
-        }
-        y += 14;
-      });
-    }
 
     doc.save(`${armyName || "army"}_list.pdf`);
   };
